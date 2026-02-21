@@ -17,8 +17,6 @@
     min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
     user-select:none;-webkit-user-select:none;overflow-x:hidden;
   }
-
-  /* Header */
   header{
     width:100%;max-width:700px;padding:16px 20px 0;display:flex;
     justify-content:space-between;align-items:center;
@@ -30,51 +28,16 @@
   .heart{transition:all .3s}
   .heart.lost{opacity:.2;transform:scale(.8);filter:grayscale(1)}
   .streak{color:var(--accent);font-size:.85rem}
-
-  /* Progress bar */
-  .progress-wrap{
-    width:100%;max-width:700px;padding:10px 20px;
-  }
-  .progress-bar{
-    width:100%;height:8px;background:var(--card2);border-radius:99px;overflow:hidden;
-  }
-  .progress-fill{
-    height:100%;background:linear-gradient(90deg,var(--accent),#fbbf24);
-    border-radius:99px;transition:width .5s ease;
-  }
-  .progress-text{
-    display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);
-    margin-top:4px;font-weight:600;
-  }
-
-  /* Main card */
-  .container{
-    width:100%;max-width:700px;padding:10px 20px 30px;flex:1;
-    display:flex;flex-direction:column;
-  }
-  .card{
-    background:var(--card);border:1px solid #3d2e18;border-radius:20px;
-    padding:28px 24px;margin-bottom:16px;position:relative;overflow:hidden;
-  }
-  .card::before{
-    content:'';position:absolute;top:0;left:0;right:0;height:3px;
-    background:linear-gradient(90deg,var(--accent),#fbbf24,var(--accent));
-  }
-
-  /* Category badge */
-  .category{
-    display:inline-block;background:var(--card2);color:var(--accent);
-    font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:99px;
-    margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase;
-  }
-
-  /* Question */
-  .question{
-    font-size:1.25rem;font-weight:700;line-height:1.5;margin-bottom:6px;
-  }
+  .progress-wrap{width:100%;max-width:700px;padding:10px 20px}
+  .progress-bar{width:100%;height:8px;background:var(--card2);border-radius:99px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#fbbf24);border-radius:99px;transition:width .5s ease}
+  .progress-text{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:4px;font-weight:600}
+  .container{width:100%;max-width:700px;padding:10px 20px 30px;flex:1;display:flex;flex-direction:column}
+  .card{background:var(--card);border:1px solid #3d2e18;border-radius:20px;padding:28px 24px;margin-bottom:16px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#fbbf24,var(--accent))}
+  .category{display:inline-block;background:var(--card2);color:var(--accent);font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:99px;margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase}
+  .question{font-size:1.25rem;font-weight:700;line-height:1.5;margin-bottom:6px}
   .q-number{color:var(--muted);font-size:.8rem;font-weight:600;margin-bottom:10px}
-
-  /* Options */
   .options{display:flex;flex-direction:column;gap:10px;margin-top:8px}
   .option{
     background:var(--card2);border:2px solid #4a3a22;border-radius:14px;
@@ -89,88 +52,55 @@
     display:flex;align-items:center;justify-content:center;
     font-size:.85rem;font-weight:800;color:var(--accent);flex-shrink:0;
   }
-  .option.correct{
-    border-color:var(--green);background:var(--correct);
-  }
+  .option.correct{border-color:var(--green);background:var(--correct)}
   .option.correct .letter{background:var(--green);color:#fff}
-  .option.wrong{
-    border-color:var(--red);background:var(--wrong);
-  }
+  .option.wrong{border-color:var(--red);background:var(--wrong)}
   .option.wrong .letter{background:var(--red);color:#fff}
   .option.disabled{pointer-events:none;opacity:.5}
   .option.reveal-correct{border-color:var(--green);opacity:1!important}
-
-  /* Fun fact */
-  .funfact{
-    margin-top:14px;padding:12px 16px;background:var(--card2);
-    border-radius:12px;font-size:.88rem;line-height:1.5;
-    border-left:3px solid var(--accent);color:var(--muted);
-    display:none;
-  }
+  .funfact{margin-top:14px;padding:12px 16px;background:var(--card2);border-radius:12px;font-size:.88rem;line-height:1.5;border-left:3px solid var(--accent);color:var(--muted);display:none}
   .funfact.show{display:block;animation:fadeIn .3s ease}
   .funfact b{color:var(--text)}
-
-  /* Next button */
   .next-btn{
     margin-top:16px;padding:14px 0;width:100%;background:var(--accent);
     color:var(--bg);font-size:1.05rem;font-weight:800;border:none;
-    border-radius:14px;cursor:pointer;display:none;
-    transition:background .2s;letter-spacing:.5px;
+    border-radius:14px;cursor:pointer;display:none;transition:background .2s;letter-spacing:.5px;
     -webkit-tap-highlight-color:transparent;
   }
   .next-btn.show{display:block;animation:fadeIn .3s ease}
   .next-btn:hover{background:var(--accent2)}
   .next-btn:active{transform:scale(.98)}
-
-  /* Screens */
-  .screen{
-    display:none;flex-direction:column;align-items:center;
-    justify-content:center;text-align:center;flex:1;padding:40px 20px;
-  }
+  .screen{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;padding:40px 20px}
   .screen.active{display:flex}
   .screen h2{font-size:2rem;margin-bottom:8px}
   .screen p{color:var(--muted);font-size:1.05rem;margin-bottom:24px;line-height:1.6}
   .screen .big-emoji{font-size:4rem;margin-bottom:16px}
-  .screen .score-display{
-    font-size:3.5rem;font-weight:800;color:var(--accent);margin:8px 0;
-  }
+  .screen .score-display{font-size:3.5rem;font-weight:800;color:var(--accent);margin:8px 0}
   .screen .score-label{color:var(--muted);font-size:.9rem;font-weight:600}
   .screen .btn{
     padding:14px 40px;background:var(--accent);color:var(--bg);
     font-size:1.05rem;font-weight:800;border:none;border-radius:14px;
-    cursor:pointer;margin-top:8px;letter-spacing:.5px;
-    -webkit-tap-highlight-color:transparent;
+    cursor:pointer;margin-top:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;
   }
   .screen .btn:hover{background:var(--accent2)}
   .screen .btn:active{transform:scale(.98)}
-  .screen .btn.secondary{
-    background:transparent;color:var(--accent);border:2px solid var(--accent);
-    margin-top:10px;
-  }
-  .final-stats{
-    display:flex;gap:24px;margin:16px 0;flex-wrap:wrap;justify-content:center;
-  }
+  .final-stats{display:flex;gap:24px;margin:16px 0;flex-wrap:wrap;justify-content:center}
   .final-stat{text-align:center}
   .final-stat .val{font-size:1.8rem;font-weight:800;color:var(--accent)}
   .final-stat .lbl{font-size:.75rem;color:var(--muted);font-weight:600}
-
+  .pool-note{font-size:.75rem;color:var(--muted);margin-top:12px}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
   .shake{animation:shake .4s ease}
-
   @media(max-width:500px){
-    .question{font-size:1.1rem}
-    .option{padding:12px 14px;font-size:.95rem}
-    .card{padding:20px 16px}
-    header{padding:12px 16px 0}
-    .progress-wrap{padding:8px 16px}
-    .container{padding:8px 16px 24px}
+    .question{font-size:1.1rem}.option{padding:12px 14px;font-size:.95rem}
+    .card{padding:20px 16px}header{padding:12px 16px 0}
+    .progress-wrap{padding:8px 16px}.container{padding:8px 16px 24px}
     .screen h2{font-size:1.6rem}
   }
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo"><span>Foodie</span> Trivia</div>
   <div class="stats">
@@ -178,7 +108,6 @@
     <div class="streak" id="streak"></div>
   </div>
 </header>
-
 <div class="progress-wrap" id="progress-section">
   <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
   <div class="progress-text">
@@ -186,9 +115,7 @@
     <span id="progress-right">0 / 50</span>
   </div>
 </div>
-
 <div class="container">
-  <!-- Game screen -->
   <div id="game-screen">
     <div class="card" id="card">
       <div class="category" id="category"></div>
@@ -197,18 +124,14 @@
       <div class="options" id="options"></div>
       <div class="funfact" id="funfact"></div>
     </div>
-    <button class="next-btn" id="next-btn">Next Question →</button>
+    <button class="next-btn" id="next-btn">Next Question</button>
   </div>
-
-  <!-- Start screen -->
   <div class="screen active" id="start-screen">
     <div class="big-emoji">🍕</div>
     <h2>Foodie Trivia</h2>
-    <p>50 questions about food from around the world.<br>You get 3 lives — how far can you go?</p>
+    <p>200+ questions about food from around the world.<br>You get 3 lives — how far can you go?<br>Questions never repeat until you've seen them all.</p>
     <button class="btn" onclick="startGame()">Let's Eat! 🍽️</button>
   </div>
-
-  <!-- Game over screen -->
   <div class="screen" id="end-screen">
     <div class="big-emoji" id="end-emoji">😋</div>
     <h2 id="end-title">Amazing!</h2>
@@ -217,98 +140,246 @@
     <div class="final-stats" id="final-stats"></div>
     <p id="end-msg"></p>
     <button class="btn" onclick="startGame()">Play Again 🔄</button>
+    <div class="pool-note" id="pool-note"></div>
   </div>
 </div>
-
 <script>
-// ─────────── 50 FOODIE TRIVIA QUESTIONS ───────────
-const ALL_QUESTIONS = [
-  {cat:"World Cuisine",q:"Which country is the origin of the dish 'Pad Thai'?",o:["Thailand","Vietnam","China","Japan"],a:0,f:"Pad Thai was popularized in the 1930s-40s as part of a Thai nation-building campaign by PM Plaek Phibunsongkhram."},
-  {cat:"Ingredients",q:"What spice gives curry its characteristic yellow color?",o:["Turmeric","Saffron","Paprika","Cumin"],a:0,f:"Turmeric contains curcumin, which is also studied for its anti-inflammatory properties."},
-  {cat:"Classics",q:"What is the main ingredient in traditional Italian pesto?",o:["Basil","Parsley","Oregano","Cilantro"],a:0,f:"Authentic Genovese pesto uses basil, pine nuts, garlic, Parmigiano-Reggiano, Pecorino, and olive oil."},
-  {cat:"Drinks",q:"Which country produces the most coffee in the world?",o:["Brazil","Colombia","Ethiopia","Vietnam"],a:0,f:"Brazil has been the top coffee producer for over 150 years, producing about a third of the world's supply."},
-  {cat:"Pastry & Desserts",q:"What French pastry is made of layers of puff pastry and cream?",o:["Mille-feuille","Croissant","Éclair","Macaron"],a:0,f:"Mille-feuille literally means 'a thousand leaves' referring to its many delicate flaky layers."},
-  {cat:"World Cuisine",q:"Sushi rice is traditionally seasoned with what?",o:["Rice vinegar & sugar","Soy sauce","Mirin only","Sesame oil"],a:0,f:"The word 'sushi' actually refers to the seasoned rice, not the fish — it comes from an archaic word meaning 'sour'."},
-  {cat:"Ingredients",q:"Which nut is used to make marzipan?",o:["Almonds","Cashews","Hazelnuts","Walnuts"],a:0,f:"Marzipan dates back to the Middle Ages and was considered a luxury item used in elaborate table decorations."},
-  {cat:"History",q:"Which civilization is credited with first making chocolate drinks?",o:["Maya","Aztec","Inca","Olmec"],a:3,f:"The Olmecs of southern Mexico (1500 BCE) are believed to be the first to process cacao beans into chocolate."},
-  {cat:"World Cuisine",q:"What is the primary grain used in Italian risotto?",o:["Arborio rice","Basmati rice","Jasmine rice","Wild rice"],a:0,f:"Arborio rice is a short-grain rice named after the town of Arborio in the Po Valley of Italy."},
-  {cat:"Techniques",q:"What does 'al dente' mean when cooking pasta?",o:["Firm to the bite","Soft and mushy","Cold in the center","Slightly burnt"],a:0,f:"Al dente literally translates to 'to the tooth' in Italian. It's the ideal texture for pasta."},
-  {cat:"Ingredients",q:"Which fruit is known as the 'king of fruits' in Southeast Asia?",o:["Durian","Mango","Jackfruit","Rambutan"],a:0,f:"Durian is banned from many hotels and public transport in Southeast Asia due to its intense smell."},
-  {cat:"World Cuisine",q:"Kimchi is a staple side dish from which country?",o:["South Korea","Japan","China","Thailand"],a:0,f:"There are over 200 varieties of kimchi in Korea. It's so important that there's a kimchi museum in Seoul."},
-  {cat:"Pastry & Desserts",q:"Tiramisu is a famous dessert from which country?",o:["Italy","France","Spain","Portugal"],a:0,f:"Tiramisu means 'pick me up' or 'lift me up' in Italian, referring to the caffeine from the espresso and cocoa."},
-  {cat:"Ingredients",q:"What type of milk is traditionally used in Indian chai?",o:["Whole buffalo or cow milk","Coconut milk","Oat milk","Goat milk"],a:0,f:"Chai just means 'tea' in Hindi. Saying 'chai tea' is technically saying 'tea tea'."},
-  {cat:"Techniques",q:"What is the French culinary term for finely diced vegetables?",o:["Brunoise","Julienne","Chiffonade","Concassé"],a:0,f:"Brunoise is one of the most precise knife cuts — cubes of about 1-2mm. It's usually done by first cutting julienne strips."},
-  {cat:"World Cuisine",q:"What is the traditional base of a Japanese miso soup?",o:["Dashi stock","Chicken stock","Vegetable stock","Beef stock"],a:0,f:"Dashi is made from kombu (kelp) and katsuobushi (bonito flakes) and is the foundation of Japanese cooking."},
-  {cat:"Classics",q:"A traditional Margherita pizza represents the Italian flag with which three toppings?",o:["Tomato, mozzarella, basil","Tomato, ricotta, arugula","Tomato, provolone, oregano","Tomato, parmesan, spinach"],a:0,f:"It was supposedly created in 1889 to honor Queen Margherita of Italy — red, white, and green like the flag."},
-  {cat:"Ingredients",q:"Wasabi is made from the root of a plant related to which family?",o:["Horseradish / mustard","Ginger","Onion","Pepper"],a:0,f:"Real wasabi is extremely expensive. Most 'wasabi' served outside Japan is actually colored horseradish paste."},
-  {cat:"History",q:"Where were French fries most likely invented?",o:["Belgium","France","USA","Netherlands"],a:0,f:"Belgians claim villagers along the Meuse River fried small fish, and when the river froze, they cut potatoes into fish shapes and fried those instead."},
-  {cat:"Drinks",q:"What grain is sake (Japanese rice wine) made from?",o:["Rice","Barley","Wheat","Millet"],a:0,f:"Sake is actually brewed more like beer than wine — it uses a mold called koji to convert starch to sugar."},
-  {cat:"World Cuisine",q:"Goulash is a traditional stew from which country?",o:["Hungary","Germany","Poland","Czech Republic"],a:0,f:"Hungarian goulash dates back to the 9th century Magyar shepherds who slow-cooked beef with paprika on the plains."},
-  {cat:"Ingredients",q:"Which spice is the most expensive in the world by weight?",o:["Saffron","Vanilla","Cardamom","Cinnamon"],a:0,f:"It takes about 75,000 crocus flowers to make one pound of saffron, and each flower must be hand-picked."},
-  {cat:"Techniques",q:"What cooking method involves submerging food in fat at a low temperature for a long time?",o:["Confit","Braising","Poaching","Blanching"],a:0,f:"Duck confit is one of the oldest forms of food preservation — the fat acts as a seal against bacteria."},
-  {cat:"World Cuisine",q:"Which country is famous for the dish 'Ceviche'?",o:["Peru","Mexico","Brazil","Chile"],a:0,f:"Ceviche 'cooks' raw fish using the acid in citrus juice, which denatures the proteins just like heat would."},
-  {cat:"Pastry & Desserts",q:"What is the main flavor in a traditional crème brûlée?",o:["Vanilla","Caramel","Chocolate","Lemon"],a:0,f:"The signature crackling caramelized sugar top is traditionally made with a small blowtorch or a salamander broiler."},
-  {cat:"Ingredients",q:"Which country is the largest producer of olive oil?",o:["Spain","Italy","Greece","Turkey"],a:0,f:"Spain produces nearly half of the world's olive oil. Andalusia alone produces more than all of Italy."},
-  {cat:"World Cuisine",q:"What is 'umami' often described as?",o:["Savory / meaty","Sweet","Sour","Bitter"],a:0,f:"Umami was identified in 1908 by Japanese chemist Kikunae Ikeda while studying kombu seaweed broth."},
-  {cat:"Classics",q:"A traditional Caesar salad was invented in which country?",o:["Mexico","USA","Italy","France"],a:0,f:"Caesar Cardini, an Italian immigrant, invented it in his restaurant in Tijuana, Mexico in the 1920s."},
-  {cat:"Ingredients",q:"What makes bread rise?",o:["Yeast producing CO₂","Baking soda","Air pockets from kneading","Steam from water"],a:0,f:"Yeast is a living organism that ferments sugars and produces carbon dioxide gas, which gets trapped in gluten."},
-  {cat:"Drinks",q:"Champagne can only legally be called 'Champagne' if it comes from where?",o:["Champagne, France","Bordeaux, France","Anywhere in France","Any EU country"],a:0,f:"This is one of the most famous examples of a 'Protected Designation of Origin' — otherwise it's just sparkling wine."},
-  {cat:"World Cuisine",q:"What is the main ingredient in the Middle Eastern dish falafel?",o:["Chickpeas","Lentils","Fava beans only","Eggplant"],a:0,f:"In Egypt, falafel is actually made from fava beans and called ta'ameya. The chickpea version is more common in the Levant."},
-  {cat:"Techniques",q:"What is the term for cooking food quickly in a small amount of oil over high heat?",o:["Sautéing","Frying","Roasting","Steaming"],a:0,f:"'Sauté' comes from the French word 'sauter' meaning 'to jump' — the food should be tossed in the pan."},
-  {cat:"History",q:"Which of these foods was the first to be commercially canned?",o:["Salmon","Corn","Tomatoes","Beans"],a:0,f:"Canning was invented by Nicolas Appert in 1810 for Napoleon's army. Salmon was among the earliest commercially canned foods."},
-  {cat:"World Cuisine",q:"Tandoori cooking gets its name from what?",o:["A clay oven called a tandoor","A spice blend","A region in India","A cooking technique"],a:0,f:"Tandoor ovens can reach temperatures of 480°C (900°F), which is why tandoori dishes cook so quickly."},
-  {cat:"Ingredients",q:"Which vegetable is the primary ingredient in the Korean dish bibimbap?",o:["Rice (with mixed vegetables)","Noodles","Cabbage","Tofu"],a:0,f:"Bibimbap literally means 'mixed rice'. It's served in a hot stone bowl (dolsot) that makes the rice crispy."},
-  {cat:"Pastry & Desserts",q:"What gives Red Velvet cake its red color traditionally?",o:["Cocoa reacting with buttermilk/vinegar","Red food dye only","Beetroot only","Strawberry extract"],a:0,f:"The original red color came from non-dutched cocoa reacting with acidic ingredients. Modern versions use food coloring."},
-  {cat:"World Cuisine",q:"Which country is credited with inventing ice cream?",o:["China","Italy","France","Persia"],a:0,f:"Ancient Chinese mixed snow with fruit and honey around 200 BCE. Marco Polo reportedly brought the concept to Italy."},
-  {cat:"Ingredients",q:"What is the hottest part of a chili pepper?",o:["The white pith (placenta)","The seeds","The skin","The tip"],a:0,f:"Capsaicin is concentrated in the pith. Seeds are only hot because they touch the pith. The tip is actually the mildest part."},
-  {cat:"Techniques",q:"What does 'deglaze' mean in cooking?",o:["Adding liquid to a hot pan to loosen browned bits","Removing sugar from a sauce","Cooling food rapidly","Removing the glaze from pottery"],a:0,f:"Those browned bits (called fond) are packed with flavor. Deglazing with wine, stock, or even water creates an instant sauce."},
-  {cat:"World Cuisine",q:"Pho is a traditional soup from which country?",o:["Vietnam","Thailand","Laos","Cambodia"],a:0,f:"Pho originated in Northern Vietnam in the early 20th century. The broth is typically simmered for 12-24 hours."},
-  {cat:"Classics",q:"What type of pasta is traditionally used in Carbonara?",o:["Spaghetti or rigatoni","Penne","Farfalle","Linguine"],a:0,f:"Authentic Carbonara uses only guanciale (cured pork cheek), egg yolks, Pecorino Romano, and black pepper — never cream."},
-  {cat:"Ingredients",q:"Tahini is a paste made from what?",o:["Sesame seeds","Chickpeas","Sunflower seeds","Peanuts"],a:0,f:"Tahini dates back over 4,000 years. It's a key ingredient in hummus, baba ganoush, and halva."},
-  {cat:"History",q:"The tomato was once believed to be poisonous in which part of the world?",o:["Europe","Asia","South America","Africa"],a:0,f:"Europeans feared tomatoes for 200 years because the acidic fruit leached lead from pewter plates, actually causing lead poisoning."},
-  {cat:"Drinks",q:"What is the main botanical in gin?",o:["Juniper berries","Coriander","Angelica root","Citrus peel"],a:0,f:"The word 'gin' comes from the Dutch word 'jenever' which means juniper. No juniper, no gin."},
-  {cat:"World Cuisine",q:"Moussaka is a layered dish most associated with which cuisine?",o:["Greek","Turkish","Lebanese","Egyptian"],a:0,f:"Greek moussaka uses eggplant, ground lamb, and béchamel sauce. The Turkish version skips the béchamel."},
-  {cat:"Techniques",q:"What is 'tempering' in chocolate making?",o:["Heating and cooling to stabilize crystals","Adding milk to dark chocolate","Mixing cocoa with sugar","Melting at very high heat"],a:0,f:"Properly tempered chocolate has a glossy finish, satisfying snap, and melts smoothly at body temperature."},
-  {cat:"Ingredients",q:"Which herb is sometimes called 'the king of herbs' in Italian cuisine?",o:["Basil","Oregano","Rosemary","Thyme"],a:0,f:"The word 'basil' comes from the Greek 'basileus' meaning 'king'. It's sacred in some Hindu traditions."},
-  {cat:"World Cuisine",q:"What is the national dish of Spain?",o:["Paella","Tapas","Gazpacho","Tortilla Española"],a:0,f:"Traditional Valencian paella uses rabbit, chicken, and snails — seafood paella is actually a later coastal variation."},
-  {cat:"Pastry & Desserts",q:"Which country do macarons (as we know them today) come from?",o:["France","Italy","Switzerland","Austria"],a:0,f:"Though the basic cookie originated in Italy, the famous sandwich macaron was created at Ladurée in Paris around 1930."},
-  {cat:"World Cuisine",q:"What Japanese word describes the concept of beautiful food presentation?",o:["Moritsuke","Umami","Kaiseki","Wabi-sabi"],a:0,f:"Moritsuke is the Japanese art of food plating. The philosophy is that we eat first with our eyes."},
+const ALL_QUESTIONS=[
+// ──── WORLD CUISINE (50+) ────
+{cat:"World Cuisine",q:"Which country is the origin of 'Pad Thai'?",o:["Thailand","Vietnam","China","Japan"],a:0,f:"Pad Thai was popularized in the 1930s-40s as part of a Thai nation-building campaign."},
+{cat:"World Cuisine",q:"Sushi rice is traditionally seasoned with what?",o:["Rice vinegar & sugar","Soy sauce","Mirin only","Sesame oil"],a:0,f:"The word 'sushi' actually refers to the seasoned rice, not the fish."},
+{cat:"World Cuisine",q:"What is the primary grain used in Italian risotto?",o:["Arborio rice","Basmati rice","Jasmine rice","Wild rice"],a:0,f:"Arborio is a short-grain rice named after the town of Arborio in Italy's Po Valley."},
+{cat:"World Cuisine",q:"Kimchi is a staple side dish from which country?",o:["South Korea","Japan","China","Thailand"],a:0,f:"There are over 200 varieties of kimchi. Seoul even has a kimchi museum."},
+{cat:"World Cuisine",q:"Which country is famous for 'Ceviche'?",o:["Peru","Mexico","Brazil","Chile"],a:0,f:"Ceviche 'cooks' raw fish using citrus acid, which denatures proteins like heat."},
+{cat:"World Cuisine",q:"Goulash is a traditional stew from which country?",o:["Hungary","Germany","Poland","Czech Republic"],a:0,f:"Hungarian goulash dates back to the 9th-century Magyar shepherds on the plains."},
+{cat:"World Cuisine",q:"Pho is a traditional soup from which country?",o:["Vietnam","Thailand","Laos","Cambodia"],a:0,f:"Pho broth is typically simmered for 12-24 hours for maximum flavor."},
+{cat:"World Cuisine",q:"What is the national dish of Spain?",o:["Paella","Tapas","Gazpacho","Tortilla Española"],a:0,f:"Traditional Valencian paella uses rabbit, chicken, and snails — not seafood."},
+{cat:"World Cuisine",q:"Moussaka is most associated with which cuisine?",o:["Greek","Turkish","Lebanese","Egyptian"],a:0,f:"Greek moussaka uses eggplant, ground lamb, and béchamel sauce."},
+{cat:"World Cuisine",q:"Tandoori cooking gets its name from what?",o:["A clay oven called a tandoor","A spice blend","A region in India","A cooking technique"],a:0,f:"Tandoor ovens can reach 480°C (900°F), cooking food extremely quickly."},
+{cat:"World Cuisine",q:"What is 'umami' often described as?",o:["Savory / meaty","Sweet","Sour","Bitter"],a:0,f:"Umami was identified in 1908 by Japanese chemist Kikunae Ikeda."},
+{cat:"World Cuisine",q:"Which country invented the croissant as we know it?",o:["France (from Austrian origins)","Austria","Italy","Switzerland"],a:0,f:"The kipferl from Vienna inspired French bakers to create the flaky croissant with laminated dough."},
+{cat:"World Cuisine",q:"What is the traditional Japanese breakfast soup?",o:["Miso soup","Ramen","Udon broth","Clear dashi"],a:0,f:"Miso soup is eaten at nearly every Japanese breakfast, often with rice and pickles."},
+{cat:"World Cuisine",q:"Tagine is a slow-cooked stew from which region?",o:["North Africa / Morocco","West Africa","Middle East","South Asia"],a:0,f:"A tagine is named after the conical clay pot it's cooked in, which traps steam."},
+{cat:"World Cuisine",q:"Which country is the birthplace of Tom Yum soup?",o:["Thailand","Vietnam","Malaysia","Indonesia"],a:0,f:"Tom Yum means 'boiling' and 'spicy and sour', perfectly describing this iconic soup."},
+{cat:"World Cuisine",q:"Pierogi are dumplings from which country?",o:["Poland","Russia","Ukraine","Germany"],a:0,f:"Pierogi are so beloved in Poland that there's an annual pierogi festival in Kraków."},
+{cat:"World Cuisine",q:"Where did the hamburger originate?",o:["United States (inspired by Hamburg, Germany)","Germany","England","Australia"],a:0,f:"The modern hamburger patty in a bun was popularized at American fairs in the early 1900s."},
+{cat:"World Cuisine",q:"Jerk seasoning is most associated with which country?",o:["Jamaica","Trinidad","Barbados","Cuba"],a:0,f:"Jerk seasoning was developed by the Maroons, escaped enslaved Africans in Jamaica's Blue Mountains."},
+{cat:"World Cuisine",q:"Borscht is a beetroot soup originating from where?",o:["Ukraine","Russia","Poland","Romania"],a:0,f:"Borscht has been a staple in Ukrainian cuisine since at least the 14th century."},
+{cat:"World Cuisine",q:"What is the main ingredient in the Ethiopian dish injera?",o:["Teff flour","Wheat flour","Corn flour","Sorghum"],a:0,f:"Teff is one of the smallest grains in the world and is naturally gluten-free."},
+{cat:"World Cuisine",q:"Which country is known for inventing dim sum?",o:["China (Canton/Guangdong)","Japan","Hong Kong","Taiwan"],a:0,f:"Dim sum originated along the Silk Road as small snacks served with tea in Cantonese teahouses."},
+{cat:"World Cuisine",q:"Shakshuka — eggs poached in tomato sauce — originated in which region?",o:["North Africa / Tunisia","Israel","Turkey","Spain"],a:0,f:"Though popular in Israel today, shakshuka traces its roots to Tunisian and Maghreb cuisine."},
+{cat:"World Cuisine",q:"Which country created the original Wiener Schnitzel?",o:["Austria","Germany","Switzerland","Hungary"],a:0,f:"Authentic Wiener Schnitzel must be made with veal. Using pork makes it 'Schnitzel Wiener Art'."},
+{cat:"World Cuisine",q:"Rendang, a slow-cooked coconut curry, comes from which country?",o:["Indonesia","Malaysia","Thailand","India"],a:0,f:"Rendang was voted the world's most delicious food by CNN in 2011 and 2017."},
+{cat:"World Cuisine",q:"Which country is known for poutine?",o:["Canada","France","Belgium","USA"],a:0,f:"Poutine originated in Quebec in the late 1950s — fries, cheese curds, and gravy."},
+// ──── INGREDIENTS (40+) ────
+{cat:"Ingredients",q:"What spice gives curry its yellow color?",o:["Turmeric","Saffron","Paprika","Cumin"],a:0,f:"Turmeric contains curcumin, also studied for anti-inflammatory properties."},
+{cat:"Ingredients",q:"Which nut is used to make marzipan?",o:["Almonds","Cashews","Hazelnuts","Walnuts"],a:0,f:"Marzipan dates back to the Middle Ages and was a luxury item."},
+{cat:"Ingredients",q:"Which fruit is the 'king of fruits' in Southeast Asia?",o:["Durian","Mango","Jackfruit","Rambutan"],a:0,f:"Durian is banned from many hotels and public transport due to its intense smell."},
+{cat:"Ingredients",q:"What type of milk is traditionally used in Indian chai?",o:["Whole buffalo or cow milk","Coconut milk","Oat milk","Goat milk"],a:0,f:"'Chai' just means 'tea' in Hindi — 'chai tea' literally means 'tea tea'."},
+{cat:"Ingredients",q:"Which spice is the most expensive by weight?",o:["Saffron","Vanilla","Cardamom","Cinnamon"],a:0,f:"It takes about 75,000 crocus flowers to make one pound of saffron."},
+{cat:"Ingredients",q:"Which country is the largest producer of olive oil?",o:["Spain","Italy","Greece","Turkey"],a:0,f:"Andalusia alone produces more olive oil than all of Italy."},
+{cat:"Ingredients",q:"What is the hottest part of a chili pepper?",o:["The white pith (placenta)","The seeds","The skin","The tip"],a:0,f:"Capsaicin concentrates in the pith. Seeds are hot only because they touch it."},
+{cat:"Ingredients",q:"Tahini is a paste made from what?",o:["Sesame seeds","Chickpeas","Sunflower seeds","Peanuts"],a:0,f:"Tahini dates back over 4,000 years and is key in hummus and halva."},
+{cat:"Ingredients",q:"Which herb is called 'the king of herbs' in Italian cooking?",o:["Basil","Oregano","Rosemary","Thyme"],a:0,f:"The word 'basil' comes from the Greek 'basileus' meaning 'king'."},
+{cat:"Ingredients",q:"What makes bread rise?",o:["Yeast producing CO₂","Baking soda","Air from kneading","Steam"],a:0,f:"Yeast ferments sugars and produces CO₂ gas trapped by gluten."},
+{cat:"Ingredients",q:"Wasabi belongs to the same family as which plant?",o:["Horseradish / mustard","Ginger","Onion","Pepper"],a:0,f:"Most 'wasabi' outside Japan is actually colored horseradish paste."},
+{cat:"Ingredients",q:"What is the main ingredient in the Middle Eastern dish falafel?",o:["Chickpeas","Lentils","Fava beans only","Eggplant"],a:0,f:"In Egypt, falafel is made from fava beans and called ta'ameya."},
+{cat:"Ingredients",q:"Which grain is used to make traditional Japanese mochi?",o:["Glutinous (sticky) rice","Regular white rice","Wheat","Barley"],a:0,f:"Mochi is pounded until smooth and stretchy, traditionally done in a ceremony called mochitsuki."},
+{cat:"Ingredients",q:"What gives blue cheese its blue veins?",o:["Penicillium mold","Natural aging","Blue food dye","Mineral deposits"],a:0,f:"Blue cheese uses Penicillium roqueforti or P. glaucum mold, deliberately introduced during production."},
+{cat:"Ingredients",q:"Ghee is a type of what?",o:["Clarified butter","Cooking oil","Margarine","Lard"],a:0,f:"Ghee is simmered longer than regular clarified butter, giving it a nutty flavor. It's central to Indian cooking."},
+{cat:"Ingredients",q:"Which bean is used to make tofu?",o:["Soybean","Black bean","Lima bean","Kidney bean"],a:0,f:"Tofu was invented in China over 2,000 years ago, supposedly by accident."},
+{cat:"Ingredients",q:"What is the world's most consumed spice?",o:["Black pepper","Salt","Cumin","Chili"],a:0,f:"Black pepper was once so valuable it was called 'black gold' and used as currency."},
+{cat:"Ingredients",q:"Truffle is a type of what?",o:["Fungus (underground mushroom)","Root vegetable","Tuber like potato","Seed pod"],a:0,f:"Truffles grow underground and are found using trained pigs or dogs. White truffles can cost $3,000+ per pound."},
+{cat:"Ingredients",q:"Which pepper is used to make paprika?",o:["Red bell peppers (or specific varieties)","Jalapeños","Black peppercorns","Cayenne only"],a:0,f:"Hungarian paprika comes in 8 grades from delicate (mild) to exquisite (pungent)."},
+{cat:"Ingredients",q:"What is panko?",o:["Japanese-style breadcrumbs","A type of flour","Rice noodles","Fried tofu skin"],a:0,f:"Panko is made from bread baked with electrical current, producing a crustless, airy crumb."},
+{cat:"Ingredients",q:"Capers are actually what part of a plant?",o:["Flower buds","Seeds","Leaves","Roots"],a:0,f:"Capers are picked before they bloom. If left to flower and fruit, the fruit is called a caper berry."},
+{cat:"Ingredients",q:"What nut is essential in making real Nutella?",o:["Hazelnuts","Almonds","Peanuts","Macadamia"],a:0,f:"Nutella was born after WWII when cocoa was scarce, so hazelnuts from Piedmont were used to extend it."},
+{cat:"Ingredients",q:"Sumac, used in Middle Eastern cooking, has what flavor profile?",o:["Tart / lemony","Spicy / hot","Sweet","Bitter / earthy"],a:0,f:"Sumac is ground from dried berries and was used as a souring agent before lemons reached the Middle East."},
+{cat:"Ingredients",q:"What gives vanilla extract its primary flavor compound?",o:["Vanillin","Coumarin","Eugenol","Cinnamic acid"],a:0,f:"Natural vanilla is the second most expensive spice after saffron. It comes from orchid seed pods."},
+// ──── TECHNIQUES (30+) ────
+{cat:"Techniques",q:"What does 'al dente' mean for pasta?",o:["Firm to the bite","Soft and mushy","Cold in center","Slightly burnt"],a:0,f:"Al dente literally means 'to the tooth' in Italian."},
+{cat:"Techniques",q:"What French term means finely diced vegetables?",o:["Brunoise","Julienne","Chiffonade","Concassé"],a:0,f:"Brunoise cubes are about 1-2mm, made by first cutting julienne strips."},
+{cat:"Techniques",q:"What cooking method submerges food in low-temp fat for a long time?",o:["Confit","Braising","Poaching","Blanching"],a:0,f:"Duck confit is one of the oldest preservation methods — fat seals against bacteria."},
+{cat:"Techniques",q:"What does 'deglaze' mean in cooking?",o:["Adding liquid to loosen browned bits","Removing sugar","Cooling food rapidly","Removing a glaze"],a:0,f:"Browned bits (fond) are packed with flavor. Deglazing creates an instant sauce."},
+{cat:"Techniques",q:"What is 'tempering' in chocolate making?",o:["Heating and cooling to stabilize crystals","Adding milk","Mixing cocoa with sugar","Melting at very high heat"],a:0,f:"Tempered chocolate has a glossy finish, snaps cleanly, and melts smoothly."},
+{cat:"Techniques",q:"What cooking term means to cook food quickly in boiling water then plunge into ice water?",o:["Blanching","Parboiling","Poaching","Steaming"],a:0,f:"Blanching preserves color, texture, and nutrients — that's why restaurant vegetables look so vibrant."},
+{cat:"Techniques",q:"What is the Maillard reaction?",o:["Browning from amino acids + sugars reacting with heat","Caramelization of sugar","Fermentation","Oxidation"],a:0,f:"The Maillard reaction creates hundreds of flavor compounds and is why seared steak tastes so good."},
+{cat:"Techniques",q:"What does 'bain-marie' refer to?",o:["A water bath for gentle heating","A type of French knife","A pastry technique","A sauce base"],a:0,f:"A bain-marie prevents delicate items like custards and chocolate from overheating."},
+{cat:"Techniques",q:"What is 'mise en place'?",o:["Preparing and organizing ingredients before cooking","A plating technique","A type of menu","A French dessert"],a:0,f:"Mise en place is French for 'everything in its place' — the cornerstone of professional kitchens."},
+{cat:"Techniques",q:"What technique involves cooking food in a sealed bag in a water bath at precise temperatures?",o:["Sous vide","Confit","Poaching","Steam baking"],a:0,f:"Sous vide means 'under vacuum' in French. It allows precise temperature control to the degree."},
+{cat:"Techniques",q:"What does 'fold' mean in baking?",o:["Gently combining without deflating","Kneading vigorously","Rolling dough flat","Whisking at high speed"],a:0,f:"Folding preserves air bubbles, which is crucial for soufflés, mousse, and delicate batters."},
+{cat:"Techniques",q:"Flambé involves what dramatic technique?",o:["Igniting alcohol in the pan","Deep frying at extreme heat","Smoking with wood chips","Rapid boiling"],a:0,f:"Flambé burns off most of the alcohol while leaving behind the flavor of the spirit."},
+{cat:"Techniques",q:"What is 'chiffonade'?",o:["Thinly sliced leafy herbs or greens","A dicing technique","A whipping method","A braising style"],a:0,f:"Stack the leaves, roll them tightly, and slice across to get beautiful thin ribbons."},
+{cat:"Techniques",q:"What does 'reduce' mean in sauce-making?",o:["Simmer to evaporate liquid and concentrate flavor","Add water to thin","Strain out solids","Cool and skim fat"],a:0,f:"A reduction can intensify flavors dramatically — a cup of stock might reduce to a few tablespoons of glaze."},
+{cat:"Techniques",q:"What is dry-aging in beef?",o:["Storing unwrapped in controlled cold conditions","Freezing and thawing","Rubbing with salt and hanging","Vacuum sealing"],a:0,f:"Dry-aging can last 30-60+ days. Enzymes break down muscle fibers, creating intense beefy flavor."},
+{cat:"Techniques",q:"What is 'proofing' in bread making?",o:["Letting dough rise after shaping","Testing if yeast is alive","Checking oven temperature","Kneading the dough"],a:0,f:"Proofing is the final rise. Under-proofed bread is dense; over-proofed bread collapses."},
+// ──── HISTORY (30+) ────
+{cat:"History",q:"Which civilization first made chocolate drinks?",o:["Olmec","Aztec","Inca","Maya"],a:0,f:"The Olmecs of southern Mexico (1500 BCE) first processed cacao beans."},
+{cat:"History",q:"Where were French fries most likely invented?",o:["Belgium","France","USA","Netherlands"],a:0,f:"Belgians claim villagers fried potatoes cut into fish shapes when the river froze."},
+{cat:"History",q:"The tomato was once believed to be poisonous where?",o:["Europe","Asia","South America","Africa"],a:0,f:"Acidic tomatoes leached lead from pewter plates, actually causing lead poisoning."},
+{cat:"History",q:"A traditional Caesar salad was invented in which country?",o:["Mexico","USA","Italy","France"],a:0,f:"Caesar Cardini created it in his Tijuana restaurant in the 1920s."},
+{cat:"History",q:"Which country is credited with inventing ice cream?",o:["China","Italy","France","Persia"],a:0,f:"Ancient Chinese mixed snow with fruit and honey around 200 BCE."},
+{cat:"History",q:"Which food was the first sent into space?",o:["Applesauce (in a tube)","Bread","Freeze-dried ice cream","Tang"],a:0,f:"John Glenn ate applesauce from a tube during his 1962 Mercury mission."},
+{cat:"History",q:"The sandwich is named after a person from which country?",o:["England","France","Germany","Italy"],a:0,f:"The 4th Earl of Sandwich supposedly asked for meat between bread so he could keep gambling."},
+{cat:"History",q:"Which ancient civilization built the first known brewery?",o:["Sumerians","Egyptians","Greeks","Romans"],a:0,f:"The Sumerians even had a goddess of beer — Ninkasi — and a hymn with a brewing recipe."},
+{cat:"History",q:"Margarine was originally invented as a substitute for what?",o:["Butter","Lard","Oil","Cream"],a:0,f:"Napoleon III offered a prize for a cheap butter alternative for his troops. Hippolyte Mège-Mouriès won in 1869."},
+{cat:"History",q:"Where was the first restaurant (in the modern sense) opened?",o:["Paris, France","London, England","Rome, Italy","New York, USA"],a:0,f:"The first modern restaurant, with individual tables and a menu, opened in Paris around 1765."},
+{cat:"History",q:"Which spice was once worth more than gold by weight?",o:["Pepper","Cinnamon","Nutmeg","Cloves"],a:0,f:"In medieval Europe, peppercorns could be used to pay rent and taxes."},
+{cat:"History",q:"The microwave oven was invented accidentally while working on what?",o:["Radar technology","Radio","Television","Nuclear energy"],a:0,f:"Engineer Percy Spencer noticed a chocolate bar in his pocket melted near a radar magnetron in 1945."},
+{cat:"History",q:"Which country first cultivated potatoes?",o:["Peru","Ireland","Germany","Russia"],a:0,f:"Potatoes were domesticated in the Andes around 8000 BCE. The Inca had over 200 varieties."},
+{cat:"History",q:"Ketchup was originally made from what?",o:["Fermented fish sauce","Tomatoes","Mushrooms","Berries"],a:0,f:"The word 'ketchup' likely comes from the Chinese 'kê-tsiap', a fermented fish sauce. Tomato ketchup came centuries later."},
+{cat:"History",q:"Which country invented pasta — or at least claims to?",o:["China and Italy (both claim it)","Italy alone","China alone","Greece"],a:0,f:"Chinese noodles date back 4,000 years. Italian pasta has independent origins from durum wheat and Arab influence."},
+{cat:"History",q:"When was the fork first widely adopted as an eating utensil in Europe?",o:["16th-17th century","Ancient Rome","10th century","19th century"],a:0,f:"Forks were initially mocked as effeminate. Even in the 1600s, many Europeans ate with knives and hands."},
+{cat:"History",q:"What was the original purpose of pretzels?",o:["A reward for children learning prayers","A snack for beer drinkers","Ship rations","Festival food"],a:0,f:"Italian monks supposedly shaped pretzels to resemble arms crossed in prayer around 610 CE."},
+{cat:"History",q:"Which drink was once prescribed as medicine in Europe?",o:["Coffee","Beer","Milk","Orange juice"],a:0,f:"When coffee reached Europe in the 17th century, doctors prescribed it for ailments from headaches to gout."},
+// ──── DRINKS (25+) ────
+{cat:"Drinks",q:"Which country produces the most coffee?",o:["Brazil","Colombia","Ethiopia","Vietnam"],a:0,f:"Brazil has been the top coffee producer for over 150 years."},
+{cat:"Drinks",q:"What grain is sake made from?",o:["Rice","Barley","Wheat","Millet"],a:0,f:"Sake is brewed more like beer than wine — it uses koji mold to convert starch to sugar."},
+{cat:"Drinks",q:"Champagne can only be called that if from where?",o:["Champagne, France","Bordeaux, France","Anywhere in France","Any EU country"],a:0,f:"This is a famous 'Protected Designation of Origin' — otherwise it's just sparkling wine."},
+{cat:"Drinks",q:"What is the main botanical in gin?",o:["Juniper berries","Coriander","Angelica root","Citrus peel"],a:0,f:"'Gin' comes from the Dutch 'jenever' meaning juniper. No juniper, no gin."},
+{cat:"Drinks",q:"What tea is known as 'red tea' in China?",o:["Black tea","Rooibos","Hibiscus","Pu-erh"],a:0,f:"What the West calls 'black tea' is called 'red tea' (hóngchá) in China based on the liquor color."},
+{cat:"Drinks",q:"Mezcal must be made from what plant?",o:["Agave","Cactus","Sugarcane","Corn"],a:0,f:"All tequila is mezcal, but not all mezcal is tequila. Tequila can only use blue agave."},
+{cat:"Drinks",q:"What is the origin country of the mojito?",o:["Cuba","Mexico","Spain","Puerto Rico"],a:0,f:"The mojito's origins trace back to 16th century Havana, originally as a medicinal drink."},
+{cat:"Drinks",q:"Which country drinks the most tea per capita?",o:["Turkey","China","United Kingdom","India"],a:0,f:"Turks drink roughly 3-4 kg of tea per person per year — nearly double the UK."},
+{cat:"Drinks",q:"What is the base spirit in a traditional margarita?",o:["Tequila","Mezcal","Rum","Vodka"],a:0,f:"The classic margarita is simply tequila, lime juice, and orange liqueur (Cointreau or triple sec)."},
+{cat:"Drinks",q:"Kombucha is made by fermenting what?",o:["Sweet tea with a SCOBY culture","Fruit juice","Milk","Coconut water"],a:0,f:"SCOBY stands for 'Symbiotic Culture Of Bacteria and Yeast'. Kombucha dates back to ancient China."},
+{cat:"Drinks",q:"What Italian coffee drink means 'stained' or 'spotted'?",o:["Macchiato","Latte","Cappuccino","Ristretto"],a:0,f:"A traditional macchiato is just espresso 'stained' with a small dollop of foamed milk."},
+{cat:"Drinks",q:"Port wine comes from which country?",o:["Portugal","Spain","France","Italy"],a:0,f:"Port is produced exclusively in the Douro Valley and named after the city of Porto."},
+{cat:"Drinks",q:"What makes an IPA different from other beers?",o:["Higher hop content","More malt","Wheat base","Lower alcohol"],a:0,f:"IPA stands for India Pale Ale — extra hops were added to preserve beer during the long sea voyage to India."},
+// ──── PASTRY & DESSERTS (30+) ────
+{cat:"Pastry & Desserts",q:"What French pastry has layers of puff pastry and cream?",o:["Mille-feuille","Croissant","Éclair","Macaron"],a:0,f:"Mille-feuille means 'a thousand leaves' referring to its delicate flaky layers."},
+{cat:"Pastry & Desserts",q:"Tiramisu is from which country?",o:["Italy","France","Spain","Portugal"],a:0,f:"Tiramisu means 'pick me up' in Italian, from the espresso and cocoa."},
+{cat:"Pastry & Desserts",q:"What is the main flavor in crème brûlée?",o:["Vanilla","Caramel","Chocolate","Lemon"],a:0,f:"The crackling sugar top is made with a blowtorch or salamander broiler."},
+{cat:"Pastry & Desserts",q:"Which country do macarons (sandwich style) come from?",o:["France","Italy","Switzerland","Austria"],a:0,f:"The sandwich macaron was created at Ladurée in Paris around 1930."},
+{cat:"Pastry & Desserts",q:"What gives Red Velvet cake its red color traditionally?",o:["Cocoa reacting with buttermilk/vinegar","Red food dye only","Beetroot only","Strawberry"],a:0,f:"The original color came from non-dutched cocoa reacting with acidic ingredients."},
+{cat:"Pastry & Desserts",q:"What is the signature feature of a kouign-amann?",o:["Caramelized butter and sugar laminated layers","Chocolate filling","Fruit glaze","Meringue top"],a:0,f:"Kouign-amann means 'butter cake' in Breton. It was invented in Brittany, France in the 1860s."},
+{cat:"Pastry & Desserts",q:"Baklava is most associated with which region?",o:["Middle East / Turkey / Greece","India","North Africa","Central Asia"],a:0,f:"Both Turkey and Greece fiercely claim baklava's origins. The layered phyllo technique dates back centuries."},
+{cat:"Pastry & Desserts",q:"What Japanese dessert is made from sweet rice flour and often filled with red bean paste?",o:["Mochi","Dango","Dorayaki","Taiyaki"],a:0,f:"Mochi is traditionally made by pounding steamed rice with large wooden mallets."},
+{cat:"Pastry & Desserts",q:"What Italian dessert means 'cooked cream'?",o:["Panna cotta","Tiramisu","Gelato","Zabaglione"],a:0,f:"Panna cotta is set with gelatin rather than eggs, making it lighter than custard."},
+{cat:"Pastry & Desserts",q:"Churros are most associated with which countries?",o:["Spain and Mexico","France","Italy","Portugal"],a:0,f:"Spanish churros are typically thin and straight; Mexican churros are thicker, coated in cinnamon sugar."},
+{cat:"Pastry & Desserts",q:"What gives a pavlova its signature texture?",o:["Crisp meringue outside, marshmallow inside","Sponge cake layers","Puff pastry","Whipped cream throughout"],a:0,f:"Both Australia and New Zealand claim to have invented the pavlova, named after ballerina Anna Pavlova."},
+{cat:"Pastry & Desserts",q:"What nut flour is the base of a French financier cake?",o:["Almond flour","Hazelnut flour","Pistachio flour","Coconut flour"],a:0,f:"Financiers are named for their gold bar shape — they were popular near the Paris stock exchange."},
+{cat:"Pastry & Desserts",q:"Cannoli are a traditional pastry from which Italian island?",o:["Sicily","Sardinia","Capri","Elba"],a:0,f:"The name 'cannoli' comes from 'canna' meaning tube. Traditionally made for Carnevale celebrations."},
+{cat:"Pastry & Desserts",q:"What is a tarte Tatin?",o:["An upside-down apple tart","A lemon meringue tart","A chocolate ganache tart","A fruit frangipane tart"],a:0,f:"Tarte Tatin was supposedly created by accident at the Tatin sisters' hotel in the 1880s."},
+{cat:"Pastry & Desserts",q:"Which country is known for the dessert 'gulab jamun'?",o:["India","Pakistan","Bangladesh","Nepal"],a:0,f:"Gulab jamun are fried milk-solid balls soaked in rose-cardamom sugar syrup. 'Gulab' means rose water."},
+// ──── CHEESE & DAIRY (15+) ────
+{cat:"Cheese & Dairy",q:"Which country produces Parmigiano-Reggiano?",o:["Italy","France","Switzerland","Netherlands"],a:0,f:"Real Parmigiano-Reggiano can only be made in specific Italian provinces and is aged at least 12 months."},
+{cat:"Cheese & Dairy",q:"What type of milk is traditional mozzarella di bufala made from?",o:["Water buffalo milk","Cow milk","Goat milk","Sheep milk"],a:0,f:"Water buffalo were brought to Italy in the 7th century. Their rich milk makes the creamiest mozzarella."},
+{cat:"Cheese & Dairy",q:"Gruyère cheese originates from which country?",o:["Switzerland","France","Austria","Germany"],a:0,f:"Gruyère is named after the town of Gruyères in the canton of Fribourg. It's aged in caves."},
+{cat:"Cheese & Dairy",q:"What is the world's most consumed cheese?",o:["Mozzarella","Cheddar","Gouda","Brie"],a:0,f:"Mozzarella's dominance is largely thanks to the global popularity of pizza."},
+{cat:"Cheese & Dairy",q:"Roquefort cheese is aged in what?",o:["Natural limestone caves","Underground cellars","Wooden barrels","Clay pots"],a:0,f:"The caves of Roquefort-sur-Soulzon have natural ventilation that supports the Penicillium roqueforti mold."},
+{cat:"Cheese & Dairy",q:"What gives Swiss cheese its holes?",o:["CO₂ from bacteria during aging","Air bubbles during mixing","Worms","Mold pockets"],a:0,f:"Propionibacterium freudenreichii produces CO₂ gas which forms the characteristic 'eyes' (holes)."},
+{cat:"Cheese & Dairy",q:"Halloumi cheese, famous for not melting, comes from where?",o:["Cyprus","Greece","Turkey","Lebanon"],a:0,f:"Halloumi has a very high melting point due to its unique production process, making it perfect for grilling."},
+{cat:"Cheese & Dairy",q:"What is the rind of Brie cheese made from?",o:["Edible white mold (Penicillium camemberti)","Wax","Cloth wrapping","Ash"],a:0,f:"The white rind is entirely edible and develops during 4-5 weeks of aging in controlled caves."},
+// ──── SEAFOOD & MEAT (15+) ────
+{cat:"Seafood & Meat",q:"What cut of beef is a T-bone steak made from?",o:["Short loin (strip + tenderloin)","Ribeye","Chuck","Sirloin"],a:0,f:"The T-shaped bone divides the strip steak from a small piece of tenderloin (filet)."},
+{cat:"Seafood & Meat",q:"Prosciutto di Parma is made from what animal?",o:["Pig","Cow","Goat","Duck"],a:0,f:"Prosciutto di Parma uses only Italian-born pigs, sea salt, air, and time — cured for at least 12 months."},
+{cat:"Seafood & Meat",q:"What is the most consumed meat worldwide?",o:["Pork","Chicken","Beef","Lamb"],a:0,f:"Pork accounts for about 36% of global meat consumption, largely driven by demand in China."},
+{cat:"Seafood & Meat",q:"Wagyu beef originates from which country?",o:["Japan","USA","Australia","Argentina"],a:0,f:"'Wagyu' literally means 'Japanese cow'. The intense marbling comes from specific genetics and feeding."},
+{cat:"Seafood & Meat",q:"What fish is traditionally used in a Nicoise salad?",o:["Tuna","Salmon","Anchovy only","Sardines"],a:0,f:"Salade Niçoise from Nice uses oil-packed tuna, hard-boiled eggs, olives, and green beans."},
+{cat:"Seafood & Meat",q:"What is 'bresaola'?",o:["Air-dried cured beef","A type of salami","Smoked pork","Cured lamb"],a:0,f:"Bresaola comes from the Lombardy region of Italy and is lean, tender, and deep ruby-red."},
+{cat:"Seafood & Meat",q:"Which country is famous for its Peking duck?",o:["China","Vietnam","Thailand","Korea"],a:0,f:"Peking duck has been served since the Imperial era. The skin is the prized part — thin and ultra-crispy."},
+{cat:"Seafood & Meat",q:"What is the main fish in traditional British fish and chips?",o:["Cod or haddock","Salmon","Tilapia","Sea bass"],a:0,f:"Fish and chips became popular in the 1860s. During WWII, it was one of the few foods not rationed."},
+// ──── SCIENCE & NUTRITION (15+) ────
+{cat:"Food Science",q:"What compound in onions makes you cry?",o:["Syn-propanethial-S-oxide","Capsaicin","Allicin","Sulfuric acid"],a:0,f:"When you cut an onion, enzymes release a gas that reacts with water in your eyes to form mild sulfuric acid."},
+{cat:"Food Science",q:"Why does pineapple make your mouth tingle?",o:["It contains bromelain, a protein-digesting enzyme","It's highly acidic","It has tiny crystals","It contains capsaicin"],a:0,f:"Bromelain literally digests the proteins on your tongue. The pineapple is eating you back."},
+{cat:"Food Science",q:"What process turns milk into yogurt?",o:["Bacterial fermentation of lactose","Adding acid directly","Heating to extreme temperatures","Enzyme from rennet"],a:0,f:"Lactobacillus bacteria convert lactose (milk sugar) into lactic acid, thickening the milk."},
+{cat:"Food Science",q:"Why does popcorn pop?",o:["Water inside the kernel turns to steam and explodes the hull","The oil ignites","Air pockets expand","Starch crystallizes rapidly"],a:0,f:"Each kernel contains a tiny drop of water. At 180°C, the steam pressure reaches ~135 PSI before the hull ruptures."},
+{cat:"Food Science",q:"What vitamin is citrus fruit famous for?",o:["Vitamin C","Vitamin D","Vitamin A","Vitamin B12"],a:0,f:"British sailors ate citrus to prevent scurvy — that's why they're called 'limeys'."},
+{cat:"Food Science",q:"Why is cast iron cookware valued by chefs?",o:["Excellent heat retention and even cooking","It's nonstick out of the box","It's lightweight","It heats up fastest"],a:0,f:"Well-seasoned cast iron develops a natural nonstick surface from polymerized oil layers built up over time."},
+{cat:"Food Science",q:"What causes bread to go stale?",o:["Starch retrogradation (crystallization)","Mold growth","Moisture loss alone","Oxidation"],a:0,f:"Staling is actually starch molecules re-crystallizing. That's why briefly reheating bread can reverse it."},
+{cat:"Food Science",q:"Why do we salt pasta water?",o:["To season the pasta as it absorbs water","To raise boiling point significantly","To prevent sticking","To cook faster"],a:0,f:"The amount of salt needed to meaningfully raise the boiling point would make pasta inedible. It's purely for flavor."},
+// ──── CULTURE & FUN FACTS (20+) ────
+{cat:"Food Culture",q:"Which country eats the most chocolate per capita?",o:["Switzerland","Belgium","USA","Germany"],a:0,f:"The Swiss consume about 10-11 kg of chocolate per person per year."},
+{cat:"Food Culture",q:"What does 'Michelin star' restaurant rating actually come from?",o:["A tire company's travel guide","A French cooking school","A government program","A TV show"],a:0,f:"The Michelin Guide was created in 1900 by the Michelin tire company to encourage road trips (and tire sales)."},
+{cat:"Food Culture",q:"In Japan, it's polite to do what while eating noodles?",o:["Slurp loudly","Eat silently","Use a fork","Cut them short"],a:0,f:"Slurping noodles in Japan aerates the broth, enhances flavor, and signals you're enjoying the meal."},
+{cat:"Food Culture",q:"What is the most ordered food delivery item in the world?",o:["Pizza","Burgers","Sushi","Chinese food"],a:0,f:"Pizza accounts for a massive share of food delivery globally, with billions of pizzas sold yearly."},
+{cat:"Food Culture",q:"Which meal is considered the most important in French culture?",o:["Lunch (le déjeuner)","Dinner","Breakfast","Afternoon snack"],a:0,f:"Traditional French lunch can last 1-2 hours with multiple courses. Many businesses still close for lunch."},
+{cat:"Food Culture",q:"How many taste sensations can the human tongue detect?",o:["Five (sweet, sour, salty, bitter, umami)","Four","Three","Seven"],a:0,f:"Umami was the last to be recognized scientifically, in 1908. Some researchers now propose a sixth: fat."},
+{cat:"Food Culture",q:"What is 'farm to table'?",o:["A movement sourcing food directly from local farms","A cooking technique","A type of restaurant license","A food delivery service"],a:0,f:"The farm-to-table movement emerged in the 1960s-70s, championed by chefs like Alice Waters of Chez Panisse."},
+{cat:"Food Culture",q:"What color is associated with good luck in Chinese food culture?",o:["Red","Gold","Green","White"],a:0,f:"Red foods and decorations appear at Chinese New Year — red symbolizes prosperity and warding off evil."},
+{cat:"Food Culture",q:"What food is traditionally thrown at Italian weddings?",o:["Confetti (sugar-coated almonds)","Rice","Bread","Grapes"],a:0,f:"Italian confetti are candy-coated almonds called 'confetti' or 'Jordan almonds' — the word for paper confetti came later."},
+{cat:"Food Culture",q:"What does 'kosher' mean in food terms?",o:["Fit or proper according to Jewish dietary law","Organic","Vegetarian","Halal-certified"],a:0,f:"Kashrut laws govern which animals can be eaten, how they're slaughtered, and that meat and dairy can't mix."},
+{cat:"Food Culture",q:"Which country has the longest average meal duration?",o:["France","Italy","Spain","Japan"],a:0,f:"The French spend an average of 2 hours and 13 minutes eating per day — the most in any OECD country."},
+{cat:"Food Culture",q:"What is the world's most widely eaten food crop?",o:["Rice","Wheat","Corn","Potatoes"],a:0,f:"Rice is the staple food for over 3.5 billion people — more than half the world's population."},
+{cat:"Food Culture",q:"In which country is it customary to leave a little food on your plate?",o:["China","Japan","France","Italy"],a:0,f:"In China, clearing your plate can imply the host didn't provide enough food. Leaving a bit shows satisfaction."},
+{cat:"Food Culture",q:"The word 'restaurant' originally meant what in French?",o:["A restorative (food that restores health)","A place to sit","A cooking method","A type of inn"],a:0,f:"Early Parisian 'restaurants' sold restorative broths to the tired and sick before evolving into dining establishments."},
+// ──── REGIONAL SPECIALTIES (15+) ────
+{cat:"Regional",q:"What is the signature ingredient of Hawaiian poke?",o:["Raw cubed fish (usually tuna)","Cooked shrimp","Spam","Grilled chicken"],a:0,f:"Poke (pronounced poh-keh) means 'to slice' in Hawaiian. It predates Japanese sushi influence by centuries."},
+{cat:"Regional",q:"What grain is the base of West African jollof rice?",o:["Long-grain rice (often parboiled)","Short-grain rice","Millet","Couscous"],a:0,f:"Nigeria and Ghana have a fierce, friendly rivalry over who makes the best jollof rice."},
+{cat:"Regional",q:"What is Argentina's most famous contribution to cooking?",o:["Asado (open-fire grilling)","Empanadas","Dulce de leche","Alfajores"],a:0,f:"Asado is more than a cooking method in Argentina — it's a social ritual, often lasting an entire afternoon."},
+{cat:"Regional",q:"What New Orleans dish is a thick stew served over rice?",o:["Gumbo","Jambalaya","Étouffée","Red beans and rice"],a:0,f:"Gumbo is a melting pot dish reflecting African, French, Spanish, and Native American influences."},
+{cat:"Regional",q:"What is the signature street food of Istanbul?",o:["Balık ekmek (fish sandwich)","Kebab","Lahmacun","Börek"],a:0,f:"Balık ekmek is grilled fish served in bread, traditionally sold from boats at the Galata Bridge."},
+{cat:"Regional",q:"What is a Scotch egg?",o:["Hard-boiled egg wrapped in sausage, breaded and fried","Fried egg in pastry","Egg with whisky sauce","Scrambled egg in haggis"],a:0,f:"Fortnum & Mason in London claims to have invented the Scotch egg in 1738 as a traveler's snack."},
+{cat:"Regional",q:"What is 'mole' in Mexican cuisine?",o:["A complex sauce with many ingredients, often including chocolate","A type of bean","A roasted meat","A tortilla dish"],a:0,f:"Mole poblano can contain 20+ ingredients including chilies, chocolate, spices, nuts, and seeds."},
+{cat:"Regional",q:"Which US state is famous for its deep-dish pizza?",o:["Illinois (Chicago)","New York","New Jersey","California"],a:0,f:"Chicago deep-dish was invented at Pizzeria Uno in 1943 by Ike Sewell and Ric Riccardo."},
+{cat:"Regional",q:"What is 'naan' traditionally cooked in?",o:["A tandoor (clay oven)","A flat griddle","A regular oven","A frying pan"],a:0,f:"The intense heat of the tandoor (up to 480°C) cooks naan in just 60-90 seconds, creating signature charred bubbles."},
+{cat:"Regional",q:"Arepas are a staple food from which countries?",o:["Venezuela and Colombia","Mexico and Guatemala","Peru and Ecuador","Brazil and Argentina"],a:0,f:"Arepas are made from ground maize dough. In Venezuela they're split and filled; in Colombia they're often topped."},
+// ──── BONUS / TRICKY (15+) ────
+{cat:"Tricky",q:"Which vegetable is technically a fruit?",o:["Tomato","Carrot","Celery","Potato"],a:0,f:"Botanically, tomatoes are fruits (they develop from a flower and contain seeds). The US Supreme Court ruled them vegetables in 1893 for tariff purposes."},
+{cat:"Tricky",q:"What 'nut' is actually a legume?",o:["Peanut","Almond","Cashew","Walnut"],a:0,f:"Peanuts grow underground in pods, just like beans and lentils — they're not nuts at all."},
+{cat:"Tricky",q:"White chocolate contains no what?",o:["Cocoa solids","Sugar","Milk","Vanilla"],a:0,f:"White chocolate is made from cocoa butter, sugar, and milk. The lack of cocoa solids means no chocolate flavor."},
+{cat:"Tricky",q:"What fruit has its seeds on the outside?",o:["Strawberry","Raspberry","Kiwi","Fig"],a:0,f:"Technically, each 'seed' on a strawberry is actually a tiny fruit (achene) containing a seed inside."},
+{cat:"Tricky",q:"Honey never spoils. What property prevents bacterial growth?",o:["Very low water activity and acidic pH","High salt content","Alcohol content","Extreme temperature"],a:0,f:"3,000-year-old honey found in Egyptian tombs was still perfectly edible."},
+{cat:"Tricky",q:"What popular sushi fish was considered garbage fish in Japan until the 1970s?",o:["Salmon (for raw consumption)","Tuna","Yellowtail","Sea bream"],a:0,f:"Raw salmon sushi was popularized by a Norwegian marketing campaign in the 1980s to sell their Atlantic salmon."},
+{cat:"Tricky",q:"How many varieties of bananas exist?",o:["Over 1,000","About 50","Around 200","Under 20"],a:0,f:"We mostly eat the Cavendish variety, but there are 1,000+ varieties. The Gros Michel was dominant until a 1950s plague wiped it out."},
+{cat:"Tricky",q:"Carrots were originally what color?",o:["Purple","Orange","White","Yellow"],a:0,f:"Orange carrots were developed in the Netherlands in the 17th century, possibly to honor the House of Orange."},
+{cat:"Tricky",q:"What is the only food that is naturally produced and never expires?",o:["Honey","Salt","Rice","Sugar"],a:0,f:"Honey's low moisture, acidity, and hydrogen peroxide content make it an eternal food."},
+{cat:"Tricky",q:"Which common spice comes from the bark of a tree?",o:["Cinnamon","Cumin","Coriander","Turmeric"],a:0,f:"Cinnamon is the inner bark of Cinnamomum trees. Ceylon (true) cinnamon is thinner and more delicate than cassia."},
+{cat:"Tricky",q:"What is the most stolen food in the world?",o:["Cheese","Chocolate","Meat","Alcohol"],a:0,f:"About 4% of all cheese produced globally is stolen. It's valuable, easy to resell, and hard to trace."},
+{cat:"Tricky",q:"Arachibutyrophobia is the fear of what food-related situation?",o:["Peanut butter sticking to the roof of your mouth","Choking on food","Eating spicy food","Allergic reactions"],a:0,f:"It's a real (if rare) phobia. The word comes from 'arachi' (legume) and 'butyro' (butter)."},
+{cat:"Tricky",q:"What percentage of the world's food is wasted each year?",o:["About one-third (33%)","About 10%","About 50%","About 5%"],a:0,f:"Roughly 1.3 billion tonnes of food is wasted annually — enough to feed 2 billion people."},
+{cat:"Tricky",q:"Which fruit can ripen other fruits faster when placed nearby?",o:["Banana (and apple)","Orange","Grape","Pineapple"],a:0,f:"Bananas and apples release ethylene gas, a natural plant hormone that accelerates ripening."},
 ];
 
-// ─────────── GAME STATE ───────────
-let questions, current, score, lives, maxLives=3, bestStreak, currentStreak, answered;
+// ─── GAME STATE ───
+let pool,questions,current,score,lives,maxLives=3,bestStreak,currentStreak,answered;
+const BATCH=50;
+
+// Pool persists across games via sessionStorage so questions never repeat
+function loadPool(){
+  try{
+    const saved=sessionStorage.getItem('foodie-pool');
+    if(saved){pool=JSON.parse(saved);}
+    else resetPool();
+  }catch(e){resetPool();}
+}
+function resetPool(){
+  pool=shuffle(ALL_QUESTIONS.map((_,i)=>i));
+  savePool();
+}
+function savePool(){try{sessionStorage.setItem('foodie-pool',JSON.stringify(pool));}catch(e){}}
 
 function shuffle(arr){
   for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
   return arr;
 }
 
+function drawBatch(){
+  if(pool.length<BATCH) resetPool(); // only reset when truly exhausted
+  const batch=pool.splice(0,BATCH);
+  savePool();
+  return batch.map(i=>({...ALL_QUESTIONS[i]}));
+}
+
 function startGame(){
-  questions=shuffle([...ALL_QUESTIONS]);
-  current=0; score=0; lives=maxLives; bestStreak=0; currentStreak=0; answered=false;
+  loadPool();
+  questions=drawBatch();
+  current=0;score=0;lives=maxLives;bestStreak=0;currentStreak=0;answered=false;
   document.getElementById('start-screen').classList.remove('active');
   document.getElementById('end-screen').classList.remove('active');
   document.getElementById('game-screen').style.display='block';
   document.getElementById('progress-section').style.display='block';
-  renderHearts(); updateStreak(); loadQuestion();
+  renderHearts();updateStreak();loadQuestion();
 }
 
 function renderHearts(){
-  const h=document.getElementById('hearts');
-  h.innerHTML='';
-  for(let i=0;i<maxLives;i++){
-    const s=document.createElement('span');
-    s.className='heart'+(i>=lives?' lost':'');
-    s.textContent='❤️';
-    h.appendChild(s);
-  }
+  const h=document.getElementById('hearts');h.innerHTML='';
+  for(let i=0;i<maxLives;i++){const s=document.createElement('span');s.className='heart'+(i>=lives?' lost':'');s.textContent='❤️';h.appendChild(s);}
 }
-
 function updateStreak(){
-  const el=document.getElementById('streak');
-  el.textContent=currentStreak>1?`🔥 ${currentStreak}`:'';
+  document.getElementById('streak').textContent=currentStreak>1?`🔥 ${currentStreak}`:'';
 }
-
 function updateProgress(){
   const pct=(current/questions.length)*100;
   document.getElementById('progress-fill').style.width=pct+'%';
@@ -320,6 +391,13 @@ function loadQuestion(){
   if(current>=questions.length){endGame(true);return;}
   answered=false;
   const q=questions[current];
+
+  // Shuffle options
+  const indices=[0,1,2,3];
+  for(let i=indices.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[indices[i],indices[j]]=[indices[j],indices[i]];}
+  q._shuffled=indices;
+  q._correctIdx=indices.indexOf(q.a);
+
   document.getElementById('category').textContent=q.cat;
   document.getElementById('q-number').textContent=`Question ${current+1} of ${questions.length}`;
   document.getElementById('question').textContent=q.q;
@@ -327,18 +405,10 @@ function loadQuestion(){
   document.getElementById('next-btn').classList.remove('show');
   updateProgress();
 
-  // Shuffle options while tracking the correct answer
-  const indices=[0,1,2,3];
-  for(let i=indices.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[indices[i],indices[j]]=[indices[j],indices[i]];}
-  q._shuffled=indices;
-  q._correctIdx=indices.indexOf(q.a);
-
-  const opts=document.getElementById('options');
-  opts.innerHTML='';
+  const opts=document.getElementById('options');opts.innerHTML='';
   const letters=['A','B','C','D'];
   indices.forEach((origIdx,i)=>{
-    const btn=document.createElement('div');
-    btn.className='option';
+    const btn=document.createElement('div');btn.className='option';
     btn.innerHTML=`<span class="letter">${letters[i]}</span><span>${q.o[origIdx]}</span>`;
     btn.addEventListener('click',()=>selectAnswer(i));
     opts.appendChild(btn);
@@ -346,44 +416,33 @@ function loadQuestion(){
 }
 
 function selectAnswer(idx){
-  if(answered) return;
+  if(answered)return;
   answered=true;
   const q=questions[current];
   const opts=document.querySelectorAll('.option');
   const card=document.getElementById('card');
 
   if(idx===q._correctIdx){
-    // Correct
     opts[idx].classList.add('correct');
-    score++; currentStreak++; if(currentStreak>bestStreak) bestStreak=currentStreak;
-  } else {
-    // Wrong
+    score++;currentStreak++;if(currentStreak>bestStreak)bestStreak=currentStreak;
+  }else{
     opts[idx].classList.add('wrong');
     opts[q._correctIdx].classList.add('reveal-correct');
-    lives--; currentStreak=0;
+    lives--;currentStreak=0;
     renderHearts();
-    card.classList.add('shake');
-    setTimeout(()=>card.classList.remove('shake'),400);
+    card.classList.add('shake');setTimeout(()=>card.classList.remove('shake'),400);
   }
-
-  // Disable all
   opts.forEach(o=>o.classList.add('disabled'));
   updateStreak();
 
-  // Show fun fact
   document.getElementById('funfact').innerHTML=`<b>Did you know?</b> ${q.f}`;
   document.getElementById('funfact').classList.add('show');
 
-  // Show next button
-  const nextBtn=document.getElementById('next-btn');
-  if(lives<=0){
-    nextBtn.textContent='See Results';
-  } else if(current>=questions.length-1){
-    nextBtn.textContent='See Results 🎉';
-  } else {
-    nextBtn.textContent='Next Question →';
-  }
-  nextBtn.classList.add('show');
+  const nb=document.getElementById('next-btn');
+  if(lives<=0)nb.textContent='See Results';
+  else if(current>=questions.length-1)nb.textContent='See Results 🎉';
+  else nb.textContent='Next Question →';
+  nb.classList.add('show');
 }
 
 document.getElementById('next-btn').addEventListener('click',()=>{
@@ -396,62 +455,53 @@ document.getElementById('next-btn').addEventListener('click',()=>{
 function endGame(completed){
   document.getElementById('game-screen').style.display='none';
   document.getElementById('progress-section').style.display='none';
-  const screen=document.getElementById('end-screen');
-  screen.classList.add('active');
+  const screen=document.getElementById('end-screen');screen.classList.add('active');
 
   const pct=questions.length>0?Math.round((score/questions.length)*100):0;
   document.getElementById('end-score').textContent=`${score} / ${questions.length}`;
 
   let emoji,title,msg;
-  if(completed && score===questions.length){
-    emoji='👨‍🍳';title='Perfect Chef!';msg='Flawless! You are a true foodie legend.';
-  } else if(completed && pct>=80){
-    emoji='🌟';title='Master Foodie!';msg='Incredible knowledge! You really know your food.';
-  } else if(completed && pct>=60){
-    emoji='😋';title='Great Taste!';msg='Solid performance — you know your way around a kitchen.';
-  } else if(completed){
-    emoji='🍽️';title='Not Bad!';msg='You made it through! Room to grow, but well done.';
-  } else if(score>=15){
-    emoji='💪';title='Good Run!';msg=`You got through ${current+1} questions — impressive!`;
-  } else if(score>=5){
-    emoji='🤔';title='Keep Learning!';msg='Every foodie starts somewhere. Try again!';
-  } else {
-    emoji='😅';title='Tough Luck!';msg='The food world is vast — give it another go!';
-  }
+  if(completed&&score===questions.length){emoji='👨‍🍳';title='Perfect Chef!';msg='Flawless! You are a true foodie legend.';}
+  else if(completed&&pct>=80){emoji='🌟';title='Master Foodie!';msg='Incredible knowledge! You really know your food.';}
+  else if(completed&&pct>=60){emoji='😋';title='Great Taste!';msg='Solid run — you know your way around a kitchen.';}
+  else if(completed){emoji='🍽️';title='Not Bad!';msg='You made it through! Room to grow, but well done.';}
+  else if(score>=15){emoji='💪';title='Good Run!';msg=`You survived ${current+1} questions — impressive!`;}
+  else if(score>=5){emoji='🤔';title='Keep Learning!';msg='Every foodie starts somewhere. Try again!';}
+  else{emoji='😅';title='Tough Luck!';msg='The food world is vast — give it another shot!';}
 
   document.getElementById('end-emoji').textContent=emoji;
   document.getElementById('end-title').textContent=title;
   document.getElementById('end-msg').textContent=msg;
 
+  const remaining=pool?pool.length:0;
+  document.getElementById('pool-note').textContent=remaining>0
+    ?`${remaining} unseen questions remaining — no repeats next game!`
+    :'All questions seen! Pool will refresh next game.';
+
   document.getElementById('final-stats').innerHTML=`
     <div class="final-stat"><div class="val">${score}</div><div class="lbl">CORRECT</div></div>
-    <div class="final-stat"><div class="val">${current+1-score}</div><div class="lbl">WRONG</div></div>
+    <div class="final-stat"><div class="val">${(current+1)-score}</div><div class="lbl">WRONG</div></div>
     <div class="final-stat"><div class="val">🔥 ${bestStreak}</div><div class="lbl">BEST STREAK</div></div>
-    <div class="final-stat"><div class="val">${pct}%</div><div class="lbl">ACCURACY</div></div>
-  `;
+    <div class="final-stat"><div class="val">${pct}%</div><div class="lbl">ACCURACY</div></div>`;
 }
 
-// Keyboard support
+// Keyboard
 document.addEventListener('keydown',e=>{
   if(document.getElementById('start-screen').classList.contains('active')){
-    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();startGame();}
-    return;
+    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();startGame();}return;
   }
   if(document.getElementById('end-screen').classList.contains('active')){
-    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();startGame();}
-    return;
+    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();startGame();}return;
   }
   if(!answered){
     const map={Digit1:0,Digit2:1,Digit3:2,Digit4:3,KeyA:0,KeyB:1,KeyC:2,KeyD:3};
     if(e.code in map){e.preventDefault();selectAnswer(map[e.code]);}
-  } else {
-    if(e.code==='Space'||e.code==='Enter'){
-      e.preventDefault();document.getElementById('next-btn').click();
-    }
+  }else{
+    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();document.getElementById('next-btn').click();}
   }
 });
 
-// Init: hide game, show start
+// Init
 document.getElementById('game-screen').style.display='none';
 document.getElementById('progress-section').style.display='none';
 </script>
