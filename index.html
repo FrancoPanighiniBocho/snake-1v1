@@ -2,162 +2,243 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake 1v1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Snake</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #0a0a0a;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    color: #eee;
-    user-select: none;
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:#0a0a0a;display:flex;flex-direction:column;align-items:center;
+    min-height:100vh;min-height:100dvh;font-family:'Segoe UI',system-ui,sans-serif;
+    color:#eee;user-select:none;-webkit-user-select:none;overflow:hidden;
+    touch-action:none;
   }
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 6px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    background: linear-gradient(90deg, #ff6b6b, #74c0fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  h1{
+    font-size:1.6rem;margin:8px 0 4px;letter-spacing:2px;text-transform:uppercase;
+    background:linear-gradient(90deg,#ff6b6b,#74c0fc);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   }
-  #scoreboard {
-    display: flex;
-    gap: 60px;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-    font-weight: 700;
+
+  /* Tabs */
+  #tabs{display:flex;gap:0;margin-bottom:8px}
+  .tab{
+    padding:8px 24px;font-size:.9rem;font-weight:700;cursor:pointer;
+    border:2px solid #333;background:#1a1a1a;color:#888;transition:.2s;
+    letter-spacing:1px;
   }
-  #s0 { color: #ff6b6b; }
-  #s1 { color: #74c0fc; }
-  .dead { opacity: 0.35; text-decoration: line-through; }
-  canvas {
-    border: 2px solid #333;
-    border-radius: 4px;
-    background: #111;
+  .tab:first-child{border-radius:8px 0 0 8px}
+  .tab:last-child{border-radius:0 8px 8px 0}
+  .tab.active{background:#222;color:#fff;border-color:#555}
+  .tab:hover{background:#252525}
+
+  #scoreboard{display:flex;gap:60px;margin-bottom:6px;font-size:1rem;font-weight:700}
+  #s0{color:#ff6b6b} #s1{color:#74c0fc}
+  .dead{opacity:.35;text-decoration:line-through}
+
+  /* Solo scoreboard */
+  #solo-scoreboard{display:none;margin-bottom:6px;font-size:1rem;font-weight:700;gap:30px}
+  #solo-score{color:#69db7c} #solo-best{color:#ffa94d;font-size:.85rem;opacity:.7}
+
+  canvas{border:2px solid #333;border-radius:4px;background:#111}
+
+  /* D-Pad */
+  #dpad{
+    display:none;position:relative;width:180px;height:180px;margin-top:12px;
   }
-  #info {
-    margin-top: 10px;
-    font-size: 0.78rem;
-    opacity: 0.5;
-    text-align: center;
-    line-height: 1.6;
+  .dpad-btn{
+    position:absolute;width:56px;height:56px;border-radius:12px;
+    background:#1a1a1a;border:2px solid #333;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.4rem;color:#aaa;cursor:pointer;
+    transition:background .1s;-webkit-tap-highlight-color:transparent;
   }
-  #overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
+  .dpad-btn:active{background:#333;color:#fff}
+  #dpad-up{top:0;left:50%;transform:translateX(-50%)}
+  #dpad-down{bottom:0;left:50%;transform:translateX(-50%)}
+  #dpad-left{top:50%;left:0;transform:translateY(-50%)}
+  #dpad-right{top:50%;right:0;transform:translateY(-50%)}
+
+  #info{margin-top:8px;font-size:.72rem;opacity:.4;text-align:center;line-height:1.5;padding:0 12px}
+
+  /* Overlay */
+  #overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.75);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;
   }
-  #overlay.hidden { display: none; }
-  #overlay h2 { font-size: 2.4rem; margin-bottom: 8px; }
-  #overlay .subtitle { font-size: 1.1rem; margin-bottom: 20px; opacity: 0.7; }
-  #overlay .prompt {
-    font-size: 1rem;
-    padding: 12px 28px;
-    border: 2px solid #555;
-    border-radius: 8px;
-    animation: pulse 1.5s ease-in-out infinite;
+  #overlay.hidden{display:none}
+  #overlay h2{font-size:2rem;margin-bottom:6px}
+  #overlay .subtitle{font-size:1rem;margin-bottom:16px;opacity:.7}
+  #overlay .prompt{
+    font-size:.95rem;padding:12px 24px;border:2px solid #555;border-radius:8px;
+    animation:pulse 1.5s ease-in-out infinite;cursor:pointer;
   }
-  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
-  #controls-info {
-    display: flex;
-    gap: 60px;
-    margin-top: 18px;
-    font-size: 0.9rem;
+  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+  #controls-info{display:flex;gap:40px;margin-top:14px;font-size:.82rem}
+  #controls-info .ctrl-group{text-align:center;line-height:1.7}
+  #controls-info .ctrl-group b{display:block;margin-bottom:2px}
+
+  /* Responsive canvas */
+  @media(max-width:850px){
+    canvas{max-width:calc(100vw - 16px);height:auto}
+    h1{font-size:1.3rem}
+    #scoreboard{gap:30px;font-size:.9rem}
   }
-  #controls-info .ctrl-group { text-align: center; line-height: 1.8; }
-  #controls-info .ctrl-group b { display: block; margin-bottom: 2px; font-size: 1rem; }
 </style>
 </head>
 <body>
 
-<h1>Snake 1v1</h1>
+<h1>Snake</h1>
 
-<div id="scoreboard">
+<div id="tabs">
+  <div class="tab active" data-mode="solo">Solo</div>
+  <div class="tab" data-mode="1v1">1v1</div>
+</div>
+
+<div id="solo-scoreboard">
+  <span id="solo-score">Score: 0</span>
+  <span id="solo-best">Best: 0</span>
+</div>
+
+<div id="scoreboard" style="display:none">
   <span id="s0">P1: 0</span>
   <span id="s1">P2: 0</span>
 </div>
 
 <canvas id="game"></canvas>
 
-<div id="overlay">
-  <h2 id="overlay-title">Snake 1v1</h2>
-  <div class="subtitle" id="overlay-sub">Head to head on one keyboard</div>
-  <div class="prompt" id="overlay-prompt">Press SPACE to start</div>
-  <div id="controls-info">
-    <div class="ctrl-group" style="color:#ff6b6b">
-      <b>Player 1</b>
-      W A S D
-    </div>
-    <div class="ctrl-group" style="color:#74c0fc">
-      <b>Player 2</b>
-      Arrow Keys
-    </div>
-  </div>
+<div id="dpad">
+  <div class="dpad-btn" id="dpad-up">&#9650;</div>
+  <div class="dpad-btn" id="dpad-left">&#9664;</div>
+  <div class="dpad-btn" id="dpad-right">&#9654;</div>
+  <div class="dpad-btn" id="dpad-down">&#9660;</div>
 </div>
 
-<div id="info">
-  Eat food to grow &bull; Hit a wall or any snake to die &bull; Last one alive or highest score wins
+<div id="overlay">
+  <h2 id="overlay-title">Snake</h2>
+  <div class="subtitle" id="overlay-sub">Swipe or use the D-Pad</div>
+  <div class="prompt" id="overlay-prompt">Tap or press SPACE to start</div>
+  <div id="controls-info"></div>
 </div>
+
+<div id="info">Eat food to grow &bull; Don't hit walls or yourself</div>
 
 <script>
 const CVS = document.getElementById('game');
 const CTX = CVS.getContext('2d');
-const COLS = 50, ROWS = 35, CELL = 16;
-CVS.width = COLS * CELL;
-CVS.height = ROWS * CELL;
-
 const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlaySub = document.getElementById('overlay-sub');
 const overlayPrompt = document.getElementById('overlay-prompt');
+const controlsInfo = document.getElementById('controls-info');
+const dpad = document.getElementById('dpad');
+const infoEl = document.getElementById('info');
 
-const DIR = { UP:{x:0,y:-1}, DOWN:{x:0,y:1}, LEFT:{x:-1,y:0}, RIGHT:{x:1,y:0} };
+const DIR = {UP:{x:0,y:-1},DOWN:{x:0,y:1},LEFT:{x:-1,y:0},RIGHT:{x:1,y:0}};
 
-const COLORS = [
-  ['#ff4444','#ff6b6b','#e03131'], // P1 red
-  ['#339af0','#74c0fc','#1c7ed6'], // P2 blue
+const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || ('ontouchstart' in window && window.innerWidth < 900);
+
+// ─── Mode ───
+let mode = 'solo'; // 'solo' | '1v1'
+let COLS, ROWS, CELL;
+let snakes, food, gameRunning, gameOver, tickTimer, tickInterval;
+let bestScore = parseInt(localStorage.getItem('snake-best') || '0');
+
+// ─── Colors ───
+const COLORS_1V1 = [
+  ['#ff4444','#ff6b6b','#e03131'],
+  ['#339af0','#74c0fc','#1c7ed6'],
 ];
+const COLOR_SOLO = ['#20c997','#69db7c','#099268'];
 
-const KEYS = [
+const KEYS_1V1 = [
   ['KeyW','KeyA','KeyS','KeyD'],
   ['ArrowUp','ArrowLeft','ArrowDown','ArrowRight'],
 ];
 
-const LABELS = ['P1','P2'];
+function sizing() {
+  if (mode === 'solo' && isMobile) {
+    const maxW = Math.min(window.innerWidth - 16, 400);
+    const maxH = window.innerHeight - 320;
+    CELL = Math.max(12, Math.min(16, Math.floor(maxW / 25)));
+    COLS = Math.floor(maxW / CELL);
+    ROWS = Math.floor(Math.max(200, maxH) / CELL);
+  } else {
+    CELL = 16; COLS = 50; ROWS = 35;
+  }
+  CVS.width = COLS * CELL;
+  CVS.height = ROWS * CELL;
+}
 
-let snakes, food, gameRunning, gameOver, tickTimer, tickInterval;
+function setMode(m) {
+  mode = m;
+  clearTimeout(tickTimer);
+  gameRunning = false;
+  gameOver = false;
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
+
+  const soloSB = document.getElementById('solo-scoreboard');
+  const vssSB = document.getElementById('scoreboard');
+
+  if (m === 'solo') {
+    soloSB.style.display = 'flex';
+    vssSB.style.display = 'none';
+    dpad.style.display = isMobile ? 'block' : 'none';
+    infoEl.textContent = 'Eat food to grow \u2022 Don\'t hit walls or yourself';
+  } else {
+    soloSB.style.display = 'none';
+    vssSB.style.display = 'flex';
+    dpad.style.display = 'none';
+    infoEl.textContent = 'Eat food to grow \u2022 Hit a wall or any snake to die \u2022 Last alive wins';
+  }
+
+  sizing();
+  initGame();
+  showOverlay();
+}
+
+function showOverlay() {
+  if (mode === 'solo') {
+    overlayTitle.textContent = 'Snake';
+    overlayTitle.style.color = '#69db7c';
+    overlaySub.textContent = isMobile ? 'Swipe or use the D-Pad' : 'Use Arrow Keys or WASD';
+    overlayPrompt.textContent = isMobile ? 'Tap to start' : 'Press SPACE to start';
+    controlsInfo.innerHTML = '';
+  } else {
+    overlayTitle.textContent = 'Snake 1v1';
+    overlayTitle.style.color = '#eee';
+    overlaySub.textContent = 'Head to head on one keyboard';
+    overlayPrompt.textContent = 'Press SPACE to start';
+    controlsInfo.innerHTML = `
+      <div class="ctrl-group" style="color:#ff6b6b"><b>Player 1</b>W A S D</div>
+      <div class="ctrl-group" style="color:#74c0fc"><b>Player 2</b>Arrow Keys</div>`;
+  }
+  overlay.classList.remove('hidden');
+}
 
 function initGame() {
   tickInterval = 120;
   gameRunning = false;
   gameOver = false;
 
-  const starts = [
-    { x: 8,        y: Math.floor(ROWS/2), dir: DIR.RIGHT },
-    { x: COLS - 9, y: Math.floor(ROWS/2), dir: DIR.LEFT  },
-  ];
-
-  snakes = starts.map((s, i) => {
+  if (mode === 'solo') {
+    const sx = Math.floor(COLS / 2), sy = Math.floor(ROWS / 2);
     const body = [];
-    for (let n = 0; n < 3; n++) {
-      body.push({ x: s.x - s.dir.x * n, y: s.y - s.dir.y * n });
-    }
-    return { body, dir:{...s.dir}, nextDir:{...s.dir}, alive:true, score:0, id:i };
-  });
+    for (let n = 0; n < 3; n++) body.push({x: sx - n, y: sy});
+    snakes = [{body, dir:{...DIR.RIGHT}, nextDir:{...DIR.RIGHT}, alive:true, score:0, id:0}];
+  } else {
+    const starts = [
+      {x:8, y:Math.floor(ROWS/2), dir:DIR.RIGHT},
+      {x:COLS-9, y:Math.floor(ROWS/2), dir:DIR.LEFT},
+    ];
+    snakes = starts.map((s,i) => {
+      const body = [];
+      for (let n = 0; n < 3; n++) body.push({x:s.x-s.dir.x*n, y:s.y-s.dir.y*n});
+      return {body, dir:{...s.dir}, nextDir:{...s.dir}, alive:true, score:0, id:i};
+    });
+  }
 
   food = [];
-  for (let i = 0; i < 4; i++) spawnFood();
+  for (let i = 0; i < (mode === 'solo' ? 3 : 4); i++) spawnFood();
   updateScoreboard();
   draw();
 }
@@ -166,68 +247,56 @@ function spawnFood() {
   const occupied = new Set();
   snakes.forEach(s => s.body.forEach(b => occupied.add(b.x+','+b.y)));
   food.forEach(f => occupied.add(f.x+','+f.y));
-  let attempts = 0;
-  while (attempts < 500) {
-    const x = Math.floor(Math.random() * COLS);
-    const y = Math.floor(Math.random() * ROWS);
-    if (!occupied.has(x+','+y)) { food.push({x,y}); return; }
-    attempts++;
+  let att = 0;
+  while (att < 500) {
+    const x = Math.floor(Math.random()*COLS), y = Math.floor(Math.random()*ROWS);
+    if (!occupied.has(x+','+y)) {food.push({x,y}); return;}
+    att++;
   }
 }
 
 function tick() {
-  snakes.forEach(s => { if (s.alive) s.dir = {...s.nextDir}; });
+  snakes.forEach(s => {if(s.alive) s.dir={...s.nextDir};});
 
-  // Move heads
   snakes.forEach(s => {
     if (!s.alive) return;
     const h = s.body[0];
-    s.body.unshift({ x: h.x + s.dir.x, y: h.y + s.dir.y });
+    s.body.unshift({x:h.x+s.dir.x, y:h.y+s.dir.y});
   });
 
-  // Body map (exclude heads)
   const bodyMap = new Map();
   snakes.forEach(s => {
     if (!s.alive) return;
-    for (let i = 1; i < s.body.length; i++) {
-      bodyMap.set(s.body[i].x+','+s.body[i].y, s.id);
-    }
+    for (let i=1;i<s.body.length;i++) bodyMap.set(s.body[i].x+','+s.body[i].y, s.id);
   });
 
-  // Collisions
   snakes.forEach(s => {
     if (!s.alive) return;
     const h = s.body[0];
-    // Walls
-    if (h.x < 0 || h.x >= COLS || h.y < 0 || h.y >= ROWS) { s.alive = false; return; }
-    // Body
-    if (bodyMap.has(h.x+','+h.y)) { s.alive = false; return; }
-    // Head-to-head
+    if (h.x<0||h.x>=COLS||h.y<0||h.y>=ROWS){s.alive=false;return;}
+    if (bodyMap.has(h.x+','+h.y)){s.alive=false;return;}
     snakes.forEach(o => {
-      if (o.id === s.id || !o.alive) return;
-      const oh = o.body[0];
-      if (h.x === oh.x && h.y === oh.y) { s.alive = false; o.alive = false; }
+      if (o.id===s.id||!o.alive) return;
+      const oh=o.body[0];
+      if (h.x===oh.x&&h.y===oh.y){s.alive=false;o.alive=false;}
     });
   });
 
-  // Eat food
   snakes.forEach(s => {
     if (!s.alive) return;
-    const h = s.body[0];
-    const fi = food.findIndex(f => f.x === h.x && f.y === h.y);
-    if (fi !== -1) {
-      s.score++;
-      food.splice(fi, 1);
-      spawnFood();
-      tickInterval = Math.max(60, tickInterval - 0.5);
-    } else {
-      s.body.pop();
-    }
+    const h=s.body[0];
+    const fi=food.findIndex(f=>f.x===h.x&&f.y===h.y);
+    if (fi!==-1){s.score++;food.splice(fi,1);spawnFood();tickInterval=Math.max(60,tickInterval-0.5);}
+    else s.body.pop();
   });
 
-  // Check game over
-  const alive = snakes.filter(s => s.alive);
-  if (alive.length <= 1) { endGame(); return; }
+  // Game over check
+  if (mode === 'solo') {
+    if (!snakes[0].alive) {endGame(); return;}
+  } else {
+    const alive = snakes.filter(s=>s.alive);
+    if (alive.length<=1) {endGame(); return;}
+  }
 
   updateScoreboard();
   draw();
@@ -236,141 +305,183 @@ function tick() {
 }
 
 function endGame() {
-  gameRunning = false;
-  gameOver = true;
+  gameRunning=false; gameOver=true;
   clearTimeout(tickTimer);
   updateScoreboard();
   draw();
 
-  const alive = snakes.filter(s => s.alive);
-  let winner;
-  if (alive.length === 1) {
-    winner = alive[0].id;
-  } else if (snakes[0].score > snakes[1].score) {
-    winner = 0;
-  } else if (snakes[1].score > snakes[0].score) {
-    winner = 1;
+  if (mode === 'solo') {
+    const sc = snakes[0].score;
+    if (sc > bestScore) {bestScore=sc; localStorage.setItem('snake-best',''+sc);}
+    overlayTitle.textContent = 'Game Over';
+    overlayTitle.style.color = '#ff6b6b';
+    overlaySub.textContent = `Score: ${sc}  \u2022  Best: ${bestScore}`;
+    overlayPrompt.textContent = isMobile ? 'Tap to play again' : 'Press SPACE to play again';
+    controlsInfo.innerHTML = '';
   } else {
-    winner = -1;
-  }
+    const alive = snakes.filter(s=>s.alive);
+    let winner;
+    if (alive.length===1) winner=alive[0].id;
+    else if (snakes[0].score>snakes[1].score) winner=0;
+    else if (snakes[1].score>snakes[0].score) winner=1;
+    else winner=-1;
 
-  if (winner === -1) {
-    overlayTitle.textContent = "It's a Tie!";
-    overlayTitle.style.color = '#eee';
-  } else {
-    overlayTitle.textContent = `${LABELS[winner]} Wins!`;
-    overlayTitle.style.color = COLORS[winner][0];
+    if (winner===-1){overlayTitle.textContent="It's a Tie!";overlayTitle.style.color='#eee';}
+    else{overlayTitle.textContent=`P${winner+1} Wins!`;overlayTitle.style.color=COLORS_1V1[winner][0];}
+    overlaySub.textContent=`${snakes[0].score} \u2014 ${snakes[1].score}`;
+    overlayPrompt.textContent='Press SPACE to play again';
+    controlsInfo.innerHTML='';
   }
-  overlaySub.textContent = `${snakes[0].score} — ${snakes[1].score}`;
-  overlayPrompt.textContent = 'Press SPACE to play again';
   overlay.classList.remove('hidden');
 }
 
 function updateScoreboard() {
-  snakes.forEach((s, i) => {
-    const el = document.getElementById('s'+i);
-    el.textContent = `${LABELS[i]}: ${s.score}`;
-    el.className = s.alive ? '' : 'dead';
-  });
+  if (mode==='solo') {
+    document.getElementById('solo-score').textContent='Score: '+snakes[0].score;
+    document.getElementById('solo-best').textContent='Best: '+bestScore;
+  } else {
+    snakes.forEach((s,i)=>{
+      const el=document.getElementById('s'+i);
+      el.textContent=`P${i+1}: ${s.score}`;
+      el.className=s.alive?'':'dead';
+    });
+  }
 }
 
 function draw() {
-  CTX.fillStyle = '#111';
-  CTX.fillRect(0, 0, CVS.width, CVS.height);
+  CTX.fillStyle='#111'; CTX.fillRect(0,0,CVS.width,CVS.height);
+  CTX.strokeStyle='#1a1a1a'; CTX.lineWidth=0.5;
+  for(let x=0;x<=COLS;x++){CTX.beginPath();CTX.moveTo(x*CELL,0);CTX.lineTo(x*CELL,CVS.height);CTX.stroke();}
+  for(let y=0;y<=ROWS;y++){CTX.beginPath();CTX.moveTo(0,y*CELL);CTX.lineTo(CVS.width,y*CELL);CTX.stroke();}
 
-  // Grid
-  CTX.strokeStyle = '#1a1a1a';
-  CTX.lineWidth = 0.5;
-  for (let x = 0; x <= COLS; x++) {
-    CTX.beginPath(); CTX.moveTo(x*CELL,0); CTX.lineTo(x*CELL,CVS.height); CTX.stroke();
-  }
-  for (let y = 0; y <= ROWS; y++) {
-    CTX.beginPath(); CTX.moveTo(0,y*CELL); CTX.lineTo(CVS.width,y*CELL); CTX.stroke();
-  }
-
-  // Food
-  food.forEach(f => {
-    CTX.fillStyle = '#ffe066';
-    CTX.shadowColor = '#ffe066';
-    CTX.shadowBlur = 8;
-    CTX.beginPath();
-    CTX.arc(f.x*CELL+CELL/2, f.y*CELL+CELL/2, CELL/2-2, 0, Math.PI*2);
-    CTX.fill();
-    CTX.shadowBlur = 0;
+  food.forEach(f=>{
+    CTX.fillStyle='#ffe066';CTX.shadowColor='#ffe066';CTX.shadowBlur=8;
+    CTX.beginPath();CTX.arc(f.x*CELL+CELL/2,f.y*CELL+CELL/2,CELL/2-2,0,Math.PI*2);CTX.fill();
+    CTX.shadowBlur=0;
   });
 
-  // Snakes
-  snakes.forEach((s, si) => {
-    const [headC, bodyC, bodyAlt] = COLORS[si];
-    CTX.globalAlpha = s.alive ? 1 : 0.25;
-
-    s.body.forEach((seg, i) => {
-      const pad = i === 0 ? 0 : 1;
-      if (i === 0) {
-        CTX.fillStyle = headC;
-        CTX.shadowColor = headC;
-        CTX.shadowBlur = s.alive ? 6 : 0;
-      } else {
-        CTX.fillStyle = i % 2 === 0 ? bodyC : bodyAlt;
-        CTX.shadowBlur = 0;
-      }
-      roundRect(CTX, seg.x*CELL+pad, seg.y*CELL+pad, CELL-pad*2, CELL-pad*2, i===0?4:2);
-      CTX.fill();
+  snakes.forEach((s,si)=>{
+    const colors = mode==='solo' ? COLOR_SOLO : COLORS_1V1[si];
+    const [headC,bodyC,bodyAlt]=colors;
+    CTX.globalAlpha=s.alive?1:.25;
+    s.body.forEach((seg,i)=>{
+      const pad=i===0?0:1;
+      if(i===0){CTX.fillStyle=headC;CTX.shadowColor=headC;CTX.shadowBlur=s.alive?6:0;}
+      else{CTX.fillStyle=i%2===0?bodyC:bodyAlt;CTX.shadowBlur=0;}
+      roundRect(CTX,seg.x*CELL+pad,seg.y*CELL+pad,CELL-pad*2,CELL-pad*2,i===0?4:2);CTX.fill();
     });
-
-    // Eyes
-    if (s.body.length > 0) {
-      const h = s.body[0];
-      CTX.fillStyle = '#111';
-      CTX.shadowBlur = 0;
-      const hx = h.x*CELL+CELL/2, hy = h.y*CELL+CELL/2;
-      const ex = s.dir.x*2, ey = s.dir.y*2;
-      const px = -s.dir.y*3, py = s.dir.x*3;
-      CTX.beginPath(); CTX.arc(hx+ex+px,hy+ey+py,1.8,0,Math.PI*2); CTX.fill();
-      CTX.beginPath(); CTX.arc(hx+ex-px,hy+ey-py,1.8,0,Math.PI*2); CTX.fill();
+    if(s.body.length>0){
+      const h=s.body[0];CTX.fillStyle='#111';CTX.shadowBlur=0;
+      const hx=h.x*CELL+CELL/2,hy=h.y*CELL+CELL/2;
+      const ex=s.dir.x*2,ey=s.dir.y*2,px=-s.dir.y*3,py=s.dir.x*3;
+      CTX.beginPath();CTX.arc(hx+ex+px,hy+ey+py,1.8,0,Math.PI*2);CTX.fill();
+      CTX.beginPath();CTX.arc(hx+ex-px,hy+ey-py,1.8,0,Math.PI*2);CTX.fill();
     }
-    CTX.globalAlpha = 1;
+    CTX.globalAlpha=1;
   });
 }
 
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
-  ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r);
-  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r);
-  ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
 }
 
-const opposite = (a,b) => a.x===-b.x && a.y===-b.y;
+// ─── Input: Keyboard ───
+const opposite=(a,b)=>a.x===-b.x&&a.y===-b.y;
+const allDirs=[DIR.UP,DIR.LEFT,DIR.DOWN,DIR.RIGHT];
 
-document.addEventListener('keydown', e => {
-  if (e.code === 'Space') {
-    e.preventDefault();
-    if (!gameRunning) {
-      if (gameOver) initGame();
-      overlay.classList.add('hidden');
-      gameRunning = true;
-      tickTimer = setTimeout(tick, tickInterval);
-    }
-    return;
+function setDir(playerIdx, dir) {
+  if(snakes[playerIdx] && snakes[playerIdx].alive && !opposite(dir,snakes[playerIdx].dir))
+    snakes[playerIdx].nextDir={...dir};
+}
+
+function startGame() {
+  if(!gameRunning){
+    if(gameOver) initGame();
+    overlay.classList.add('hidden');
+    gameRunning=true;
+    tickTimer=setTimeout(tick,tickInterval);
   }
-  const dirs = [DIR.UP, DIR.LEFT, DIR.DOWN, DIR.RIGHT];
-  KEYS.forEach((keySet, pi) => {
-    const ki = keySet.indexOf(e.code);
-    if (ki !== -1 && snakes[pi].alive) {
-      e.preventDefault();
-      const nd = dirs[ki];
-      if (!opposite(nd, snakes[pi].dir)) snakes[pi].nextDir = {...nd};
-    }
-  });
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();startGame();return;}
+
+  if(mode==='solo'){
+    // Accept both WASD and arrows in solo
+    const wasd=['KeyW','KeyA','KeyS','KeyD'];
+    const arrows=['ArrowUp','ArrowLeft','ArrowDown','ArrowRight'];
+    let ki=wasd.indexOf(e.code);
+    if(ki===-1) ki=arrows.indexOf(e.code);
+    if(ki!==-1){e.preventDefault();setDir(0,allDirs[ki]);}
+  } else {
+    KEYS_1V1.forEach((keySet,pi)=>{
+      const ki=keySet.indexOf(e.code);
+      if(ki!==-1){e.preventDefault();setDir(pi,allDirs[ki]);}
+    });
+  }
 });
 
-window.addEventListener('keydown', e => {
-  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
-}, { passive: false });
+window.addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+},{passive:false});
 
-initGame();
+// ─── Input: Swipe ───
+let touchStartX=0, touchStartY=0, touchStartTime=0;
+CVS.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const t=e.touches[0];
+  touchStartX=t.clientX; touchStartY=t.clientY; touchStartTime=Date.now();
+},{passive:false});
+
+CVS.addEventListener('touchend',e=>{
+  e.preventDefault();
+  if(mode!=='solo') return;
+  if(!gameRunning){startGame();return;}
+  const t=e.changedTouches[0];
+  const dx=t.clientX-touchStartX, dy=t.clientY-touchStartY;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<20) return; // too short
+  if(Math.abs(dx)>Math.abs(dy)){
+    setDir(0,dx>0?DIR.RIGHT:DIR.LEFT);
+  } else {
+    setDir(0,dy>0?DIR.DOWN:DIR.UP);
+  }
+},{passive:false});
+
+// ─── Input: D-Pad ───
+function dpadHandler(dir){
+  return function(e){
+    e.preventDefault();
+    if(mode!=='solo') return;
+    if(!gameRunning){startGame();return;}
+    setDir(0,dir);
+  };
+}
+document.getElementById('dpad-up').addEventListener('touchstart',dpadHandler(DIR.UP),{passive:false});
+document.getElementById('dpad-down').addEventListener('touchstart',dpadHandler(DIR.DOWN),{passive:false});
+document.getElementById('dpad-left').addEventListener('touchstart',dpadHandler(DIR.LEFT),{passive:false});
+document.getElementById('dpad-right').addEventListener('touchstart',dpadHandler(DIR.RIGHT),{passive:false});
+// Also mouse for testing
+document.getElementById('dpad-up').addEventListener('mousedown',dpadHandler(DIR.UP));
+document.getElementById('dpad-down').addEventListener('mousedown',dpadHandler(DIR.DOWN));
+document.getElementById('dpad-left').addEventListener('mousedown',dpadHandler(DIR.LEFT));
+document.getElementById('dpad-right').addEventListener('mousedown',dpadHandler(DIR.RIGHT));
+
+// ─── Overlay tap to start ───
+overlay.addEventListener('click',startGame);
+overlay.addEventListener('touchend',e=>{e.preventDefault();startGame();},{passive:false});
+
+// ─── Tabs ───
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>setMode(tab.dataset.mode));
+});
+
+// ─── Init ───
+setMode('solo');
 </script>
 </body>
 </html>
