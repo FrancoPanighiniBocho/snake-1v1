@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Foodie Trivia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#1a1207;--card:#2a1f10;--card2:#352816;--accent:#f59e0b;
+    --accent2:#d97706;--green:#22c55e;--red:#ef4444;--text:#fef3c7;
+    --muted:#a8956b;--correct:#166534;--wrong:#991b1b;
+  }
+  body{
+    background:var(--bg);font-family:'Nunito',system-ui,sans-serif;color:var(--text);
+    min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+    user-select:none;-webkit-user-select:none;overflow-x:hidden;
+  }
+
+  /* Header */
+  header{
+    width:100%;max-width:700px;padding:16px 20px 0;display:flex;
+    justify-content:space-between;align-items:center;
+  }
+  .logo{font-size:1.5rem;font-weight:800;letter-spacing:1px}
+  .logo span{color:var(--accent)}
+  .stats{display:flex;gap:16px;align-items:center;font-size:.9rem;font-weight:600}
+  .hearts{display:flex;gap:4px;font-size:1.2rem}
+  .heart{transition:all .3s}
+  .heart.lost{opacity:.2;transform:scale(.8);filter:grayscale(1)}
+  .streak{color:var(--accent);font-size:.85rem}
+
+  /* Progress bar */
+  .progress-wrap{
+    width:100%;max-width:700px;padding:10px 20px;
+  }
+  .progress-bar{
+    width:100%;height:8px;background:var(--card2);border-radius:99px;overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;background:linear-gradient(90deg,var(--accent),#fbbf24);
+    border-radius:99px;transition:width .5s ease;
+  }
+  .progress-text{
+    display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);
+    margin-top:4px;font-weight:600;
+  }
+
+  /* Main card */
+  .container{
+    width:100%;max-width:700px;padding:10px 20px 30px;flex:1;
+    display:flex;flex-direction:column;
+  }
+  .card{
+    background:var(--card);border:1px solid #3d2e18;border-radius:20px;
+    padding:28px 24px;margin-bottom:16px;position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--accent),#fbbf24,var(--accent));
+  }
+
+  /* Category badge */
+  .category{
+    display:inline-block;background:var(--card2);color:var(--accent);
+    font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:99px;
+    margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase;
+  }
+
+  /* Question */
+  .question{
+    font-size:1.25rem;font-weight:700;line-height:1.5;margin-bottom:6px;
+  }
+  .q-number{color:var(--muted);font-size:.8rem;font-weight:600;margin-bottom:10px}
+
+  /* Options */
+  .options{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+  .option{
+    background:var(--card2);border:2px solid #4a3a22;border-radius:14px;
+    padding:14px 18px;font-size:1rem;font-weight:600;cursor:pointer;
+    transition:all .2s;display:flex;align-items:center;gap:12px;
+    -webkit-tap-highlight-color:transparent;position:relative;overflow:hidden;
+  }
+  .option:hover{border-color:var(--accent);background:#3d2e18}
+  .option:active{transform:scale(.98)}
+  .option .letter{
+    width:30px;height:30px;border-radius:8px;background:var(--card);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.85rem;font-weight:800;color:var(--accent);flex-shrink:0;
+  }
+  .option.correct{
+    border-color:var(--green);background:var(--correct);
+  }
+  .option.correct .letter{background:var(--green);color:#fff}
+  .option.wrong{
+    border-color:var(--red);background:var(--wrong);
+  }
+  .option.wrong .letter{background:var(--red);color:#fff}
+  .option.disabled{pointer-events:none;opacity:.5}
+  .option.reveal-correct{border-color:var(--green);opacity:1!important}
+
+  /* Fun fact */
+  .funfact{
+    margin-top:14px;padding:12px 16px;background:var(--card2);
+    border-radius:12px;font-size:.88rem;line-height:1.5;
+    border-left:3px solid var(--accent);color:var(--muted);
+    display:none;
+  }
+  .funfact.show{display:block;animation:fadeIn .3s ease}
+  .funfact b{color:var(--text)}
+
+  /* Next button */
+  .next-btn{
+    margin-top:16px;padding:14px 0;width:100%;background:var(--accent);
+    color:var(--bg);font-size:1.05rem;font-weight:800;border:none;
+    border-radius:14px;cursor:pointer;display:none;
+    transition:background .2s;letter-spacing:.5px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .next-btn.show{display:block;animation:fadeIn .3s ease}
+  .next-btn:hover{background:var(--accent2)}
+  .next-btn:active{transform:scale(.98)}
+
+  /* Screens */
+  .screen{
+    display:none;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;flex:1;padding:40px 20px;
+  }
+  .screen.active{display:flex}
+  .screen h2{font-size:2rem;margin-bottom:8px}
+  .screen p{color:var(--muted);font-size:1.05rem;margin-bottom:24px;line-height:1.6}
+  .screen .big-emoji{font-size:4rem;margin-bottom:16px}
+  .screen .score-display{
+    font-size:3.5rem;font-weight:800;color:var(--accent);margin:8px 0;
+  }
+  .screen .score-label{color:var(--muted);font-size:.9rem;font-weight:600}
+  .screen .btn{
+    padding:14px 40px;background:var(--accent);color:var(--bg);
+    font-size:1.05rem;font-weight:800;border:none;border-radius:14px;
+    cursor:pointer;margin-top:8px;letter-spacing:.5px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .screen .btn:hover{background:var(--accent2)}
+  .screen .btn:active{transform:scale(.98)}
+  .screen .btn.secondary{
+    background:transparent;color:var(--accent);border:2px solid var(--accent);
+    margin-top:10px;
+  }
+  .final-stats{
+    display:flex;gap:24px;margin:16px 0;flex-wrap:wrap;justify-content:center;
+  }
+  .final-stat{text-align:center}
+  .final-stat .val{font-size:1.8rem;font-weight:800;color:var(--accent)}
+  .final-stat .lbl{font-size:.75rem;color:var(--muted);font-weight:600}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .shake{animation:shake .4s ease}
+
+  @media(max-width:500px){
+    .question{font-size:1.1rem}
+    .option{padding:12px 14px;font-size:.95rem}
+    .card{padding:20px 16px}
+    header{padding:12px 16px 0}
+    .progress-wrap{padding:8px 16px}
+    .container{padding:8px 16px 24px}
+    .screen h2{font-size:1.6rem}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span>Foodie</span> Trivia</div>
+  <div class="stats">
+    <div class="hearts" id="hearts"></div>
+    <div class="streak" id="streak"></div>
+  </div>
+</header>
+
+<div class="progress-wrap" id="progress-section">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-text">
+    <span id="progress-left">Question 1</span>
+    <span id="progress-right">0 / 50</span>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Game screen -->
+  <div id="game-screen">
+    <div class="card" id="card">
+      <div class="category" id="category"></div>
+      <div class="q-number" id="q-number"></div>
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <div class="funfact" id="funfact"></div>
+    </div>
+    <button class="next-btn" id="next-btn">Next Question →</button>
+  </div>
+
+  <!-- Start screen -->
+  <div class="screen active" id="start-screen">
+    <div class="big-emoji">🍕</div>
+    <h2>Foodie Trivia</h2>
+    <p>50 questions about food from around the world.<br>You get 3 lives — how far can you go?</p>
+    <button class="btn" onclick="startGame()">Let's Eat! 🍽️</button>
+  </div>
+
+  <!-- Game over screen -->
+  <div class="screen" id="end-screen">
+    <div class="big-emoji" id="end-emoji">😋</div>
+    <h2 id="end-title">Amazing!</h2>
+    <div class="score-label">YOUR SCORE</div>
+    <div class="score-display" id="end-score">0</div>
+    <div class="final-stats" id="final-stats"></div>
+    <p id="end-msg"></p>
+    <button class="btn" onclick="startGame()">Play Again 🔄</button>
+  </div>
+</div>
+
+<script>
+// ─────────── 50 FOODIE TRIVIA QUESTIONS ───────────
+const ALL_QUESTIONS = [
+  {cat:"World Cuisine",q:"Which country is the origin of the dish 'Pad Thai'?",o:["Thailand","Vietnam","China","Japan"],a:0,f:"Pad Thai was popularized in the 1930s-40s as part of a Thai nation-building campaign by PM Plaek Phibunsongkhram."},
+  {cat:"Ingredients",q:"What spice gives curry its characteristic yellow color?",o:["Turmeric","Saffron","Paprika","Cumin"],a:0,f:"Turmeric contains curcumin, which is also studied for its anti-inflammatory properties."},
+  {cat:"Classics",q:"What is the main ingredient in traditional Italian pesto?",o:["Basil","Parsley","Oregano","Cilantro"],a:0,f:"Authentic Genovese pesto uses basil, pine nuts, garlic, Parmigiano-Reggiano, Pecorino, and olive oil."},
+  {cat:"Drinks",q:"Which country produces the most coffee in the world?",o:["Brazil","Colombia","Ethiopia","Vietnam"],a:0,f:"Brazil has been the top coffee producer for over 150 years, producing about a third of the world's supply."},
+  {cat:"Pastry & Desserts",q:"What French pastry is made of layers of puff pastry and cream?",o:["Mille-feuille","Croissant","Éclair","Macaron"],a:0,f:"Mille-feuille literally means 'a thousand leaves' referring to its many delicate flaky layers."},
+  {cat:"World Cuisine",q:"Sushi rice is traditionally seasoned with what?",o:["Rice vinegar & sugar","Soy sauce","Mirin only","Sesame oil"],a:0,f:"The word 'sushi' actually refers to the seasoned rice, not the fish — it comes from an archaic word meaning 'sour'."},
+  {cat:"Ingredients",q:"Which nut is used to make marzipan?",o:["Almonds","Cashews","Hazelnuts","Walnuts"],a:0,f:"Marzipan dates back to the Middle Ages and was considered a luxury item used in elaborate table decorations."},
+  {cat:"History",q:"Which civilization is credited with first making chocolate drinks?",o:["Maya","Aztec","Inca","Olmec"],a:3,f:"The Olmecs of southern Mexico (1500 BCE) are believed to be the first to process cacao beans into chocolate."},
+  {cat:"World Cuisine",q:"What is the primary grain used in Italian risotto?",o:["Arborio rice","Basmati rice","Jasmine rice","Wild rice"],a:0,f:"Arborio rice is a short-grain rice named after the town of Arborio in the Po Valley of Italy."},
+  {cat:"Techniques",q:"What does 'al dente' mean when cooking pasta?",o:["Firm to the bite","Soft and mushy","Cold in the center","Slightly burnt"],a:0,f:"Al dente literally translates to 'to the tooth' in Italian. It's the ideal texture for pasta."},
+  {cat:"Ingredients",q:"Which fruit is known as the 'king of fruits' in Southeast Asia?",o:["Durian","Mango","Jackfruit","Rambutan"],a:0,f:"Durian is banned from many hotels and public transport in Southeast Asia due to its intense smell."},
+  {cat:"World Cuisine",q:"Kimchi is a staple side dish from which country?",o:["South Korea","Japan","China","Thailand"],a:0,f:"There are over 200 varieties of kimchi in Korea. It's so important that there's a kimchi museum in Seoul."},
+  {cat:"Pastry & Desserts",q:"Tiramisu is a famous dessert from which country?",o:["Italy","France","Spain","Portugal"],a:0,f:"Tiramisu means 'pick me up' or 'lift me up' in Italian, referring to the caffeine from the espresso and cocoa."},
+  {cat:"Ingredients",q:"What type of milk is traditionally used in Indian chai?",o:["Whole buffalo or cow milk","Coconut milk","Oat milk","Goat milk"],a:0,f:"Chai just means 'tea' in Hindi. Saying 'chai tea' is technically saying 'tea tea'."},
+  {cat:"Techniques",q:"What is the French culinary term for finely diced vegetables?",o:["Brunoise","Julienne","Chiffonade","Concassé"],a:0,f:"Brunoise is one of the most precise knife cuts — cubes of about 1-2mm. It's usually done by first cutting julienne strips."},
+  {cat:"World Cuisine",q:"What is the traditional base of a Japanese miso soup?",o:["Dashi stock","Chicken stock","Vegetable stock","Beef stock"],a:0,f:"Dashi is made from kombu (kelp) and katsuobushi (bonito flakes) and is the foundation of Japanese cooking."},
+  {cat:"Classics",q:"A traditional Margherita pizza represents the Italian flag with which three toppings?",o:["Tomato, mozzarella, basil","Tomato, ricotta, arugula","Tomato, provolone, oregano","Tomato, parmesan, spinach"],a:0,f:"It was supposedly created in 1889 to honor Queen Margherita of Italy — red, white, and green like the flag."},
+  {cat:"Ingredients",q:"Wasabi is made from the root of a plant related to which family?",o:["Horseradish / mustard","Ginger","Onion","Pepper"],a:0,f:"Real wasabi is extremely expensive. Most 'wasabi' served outside Japan is actually colored horseradish paste."},
+  {cat:"History",q:"Where were French fries most likely invented?",o:["Belgium","France","USA","Netherlands"],a:0,f:"Belgians claim villagers along the Meuse River fried small fish, and when the river froze, they cut potatoes into fish shapes and fried those instead."},
+  {cat:"Drinks",q:"What grain is sake (Japanese rice wine) made from?",o:["Rice","Barley","Wheat","Millet"],a:0,f:"Sake is actually brewed more like beer than wine — it uses a mold called koji to convert starch to sugar."},
+  {cat:"World Cuisine",q:"Goulash is a traditional stew from which country?",o:["Hungary","Germany","Poland","Czech Republic"],a:0,f:"Hungarian goulash dates back to the 9th century Magyar shepherds who slow-cooked beef with paprika on the plains."},
+  {cat:"Ingredients",q:"Which spice is the most expensive in the world by weight?",o:["Saffron","Vanilla","Cardamom","Cinnamon"],a:0,f:"It takes about 75,000 crocus flowers to make one pound of saffron, and each flower must be hand-picked."},
+  {cat:"Techniques",q:"What cooking method involves submerging food in fat at a low temperature for a long time?",o:["Confit","Braising","Poaching","Blanching"],a:0,f:"Duck confit is one of the oldest forms of food preservation — the fat acts as a seal against bacteria."},
+  {cat:"World Cuisine",q:"Which country is famous for the dish 'Ceviche'?",o:["Peru","Mexico","Brazil","Chile"],a:0,f:"Ceviche 'cooks' raw fish using the acid in citrus juice, which denatures the proteins just like heat would."},
+  {cat:"Pastry & Desserts",q:"What is the main flavor in a traditional crème brûlée?",o:["Vanilla","Caramel","Chocolate","Lemon"],a:0,f:"The signature crackling caramelized sugar top is traditionally made with a small blowtorch or a salamander broiler."},
+  {cat:"Ingredients",q:"Which country is the largest producer of olive oil?",o:["Spain","Italy","Greece","Turkey"],a:0,f:"Spain produces nearly half of the world's olive oil. Andalusia alone produces more than all of Italy."},
+  {cat:"World Cuisine",q:"What is 'umami' often described as?",o:["Savory / meaty","Sweet","Sour","Bitter"],a:0,f:"Umami was identified in 1908 by Japanese chemist Kikunae Ikeda while studying kombu seaweed broth."},
+  {cat:"Classics",q:"A traditional Caesar salad was invented in which country?",o:["Mexico","USA","Italy","France"],a:0,f:"Caesar Cardini, an Italian immigrant, invented it in his restaurant in Tijuana, Mexico in the 1920s."},
+  {cat:"Ingredients",q:"What makes bread rise?",o:["Yeast producing CO₂","Baking soda","Air pockets from kneading","Steam from water"],a:0,f:"Yeast is a living organism that ferments sugars and produces carbon dioxide gas, which gets trapped in gluten."},
+  {cat:"Drinks",q:"Champagne can only legally be called 'Champagne' if it comes from where?",o:["Champagne, France","Bordeaux, France","Anywhere in France","Any EU country"],a:0,f:"This is one of the most famous examples of a 'Protected Designation of Origin' — otherwise it's just sparkling wine."},
+  {cat:"World Cuisine",q:"What is the main ingredient in the Middle Eastern dish falafel?",o:["Chickpeas","Lentils","Fava beans only","Eggplant"],a:0,f:"In Egypt, falafel is actually made from fava beans and called ta'ameya. The chickpea version is more common in the Levant."},
+  {cat:"Techniques",q:"What is the term for cooking food quickly in a small amount of oil over high heat?",o:["Sautéing","Frying","Roasting","Steaming"],a:0,f:"'Sauté' comes from the French word 'sauter' meaning 'to jump' — the food should be tossed in the pan."},
+  {cat:"History",q:"Which of these foods was the first to be commercially canned?",o:["Salmon","Corn","Tomatoes","Beans"],a:0,f:"Canning was invented by Nicolas Appert in 1810 for Napoleon's army. Salmon was among the earliest commercially canned foods."},
+  {cat:"World Cuisine",q:"Tandoori cooking gets its name from what?",o:["A clay oven called a tandoor","A spice blend","A region in India","A cooking technique"],a:0,f:"Tandoor ovens can reach temperatures of 480°C (900°F), which is why tandoori dishes cook so quickly."},
+  {cat:"Ingredients",q:"Which vegetable is the primary ingredient in the Korean dish bibimbap?",o:["Rice (with mixed vegetables)","Noodles","Cabbage","Tofu"],a:0,f:"Bibimbap literally means 'mixed rice'. It's served in a hot stone bowl (dolsot) that makes the rice crispy."},
+  {cat:"Pastry & Desserts",q:"What gives Red Velvet cake its red color traditionally?",o:["Cocoa reacting with buttermilk/vinegar","Red food dye only","Beetroot only","Strawberry extract"],a:0,f:"The original red color came from non-dutched cocoa reacting with acidic ingredients. Modern versions use food coloring."},
+  {cat:"World Cuisine",q:"Which country is credited with inventing ice cream?",o:["China","Italy","France","Persia"],a:0,f:"Ancient Chinese mixed snow with fruit and honey around 200 BCE. Marco Polo reportedly brought the concept to Italy."},
+  {cat:"Ingredients",q:"What is the hottest part of a chili pepper?",o:["The white pith (placenta)","The seeds","The skin","The tip"],a:0,f:"Capsaicin is concentrated in the pith. Seeds are only hot because they touch the pith. The tip is actually the mildest part."},
+  {cat:"Techniques",q:"What does 'deglaze' mean in cooking?",o:["Adding liquid to a hot pan to loosen browned bits","Removing sugar from a sauce","Cooling food rapidly","Removing the glaze from pottery"],a:0,f:"Those browned bits (called fond) are packed with flavor. Deglazing with wine, stock, or even water creates an instant sauce."},
+  {cat:"World Cuisine",q:"Pho is a traditional soup from which country?",o:["Vietnam","Thailand","Laos","Cambodia"],a:0,f:"Pho originated in Northern Vietnam in the early 20th century. The broth is typically simmered for 12-24 hours."},
+  {cat:"Classics",q:"What type of pasta is traditionally used in Carbonara?",o:["Spaghetti or rigatoni","Penne","Farfalle","Linguine"],a:0,f:"Authentic Carbonara uses only guanciale (cured pork cheek), egg yolks, Pecorino Romano, and black pepper — never cream."},
+  {cat:"Ingredients",q:"Tahini is a paste made from what?",o:["Sesame seeds","Chickpeas","Sunflower seeds","Peanuts"],a:0,f:"Tahini dates back over 4,000 years. It's a key ingredient in hummus, baba ganoush, and halva."},
+  {cat:"History",q:"The tomato was once believed to be poisonous in which part of the world?",o:["Europe","Asia","South America","Africa"],a:0,f:"Europeans feared tomatoes for 200 years because the acidic fruit leached lead from pewter plates, actually causing lead poisoning."},
+  {cat:"Drinks",q:"What is the main botanical in gin?",o:["Juniper berries","Coriander","Angelica root","Citrus peel"],a:0,f:"The word 'gin' comes from the Dutch word 'jenever' which means juniper. No juniper, no gin."},
+  {cat:"World Cuisine",q:"Moussaka is a layered dish most associated with which cuisine?",o:["Greek","Turkish","Lebanese","Egyptian"],a:0,f:"Greek moussaka uses eggplant, ground lamb, and béchamel sauce. The Turkish version skips the béchamel."},
+  {cat:"Techniques",q:"What is 'tempering' in chocolate making?",o:["Heating and cooling to stabilize crystals","Adding milk to dark chocolate","Mixing cocoa with sugar","Melting at very high heat"],a:0,f:"Properly tempered chocolate has a glossy finish, satisfying snap, and melts smoothly at body temperature."},
+  {cat:"Ingredients",q:"Which herb is sometimes called 'the king of herbs' in Italian cuisine?",o:["Basil","Oregano","Rosemary","Thyme"],a:0,f:"The word 'basil' comes from the Greek 'basileus' meaning 'king'. It's sacred in some Hindu traditions."},
+  {cat:"World Cuisine",q:"What is the national dish of Spain?",o:["Paella","Tapas","Gazpacho","Tortilla Española"],a:0,f:"Traditional Valencian paella uses rabbit, chicken, and snails — seafood paella is actually a later coastal variation."},
+  {cat:"Pastry & Desserts",q:"Which country do macarons (as we know them today) come from?",o:["France","Italy","Switzerland","Austria"],a:0,f:"Though the basic cookie originated in Italy, the famous sandwich macaron was created at Ladurée in Paris around 1930."},
+  {cat:"World Cuisine",q:"What Japanese word describes the concept of beautiful food presentation?",o:["Moritsuke","Umami","Kaiseki","Wabi-sabi"],a:0,f:"Moritsuke is the Japanese art of food plating. The philosophy is that we eat first with our eyes."},
+];
+
+// ─────────── GAME STATE ───────────
+let questions, current, score, lives, maxLives=3, bestStreak, currentStreak, answered;
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+
+function startGame(){
+  questions=shuffle([...ALL_QUESTIONS]);
+  current=0; score=0; lives=maxLives; bestStreak=0; currentStreak=0; answered=false;
+  document.getElementById('start-screen').classList.remove('active');
+  document.getElementById('end-screen').classList.remove('active');
+  document.getElementById('game-screen').style.display='block';
+  document.getElementById('progress-section').style.display='block';
+  renderHearts(); updateStreak(); loadQuestion();
+}
+
+function renderHearts(){
+  const h=document.getElementById('hearts');
+  h.innerHTML='';
+  for(let i=0;i<maxLives;i++){
+    const s=document.createElement('span');
+    s.className='heart'+(i>=lives?' lost':'');
+    s.textContent='❤️';
+    h.appendChild(s);
+  }
+}
+
+function updateStreak(){
+  const el=document.getElementById('streak');
+  el.textContent=currentStreak>1?`🔥 ${currentStreak}`:'';
+}
+
+function updateProgress(){
+  const pct=(current/questions.length)*100;
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('progress-left').textContent=`Question ${current+1}`;
+  document.getElementById('progress-right').textContent=`${current} / ${questions.length}`;
+}
+
+function loadQuestion(){
+  if(current>=questions.length){endGame(true);return;}
+  answered=false;
+  const q=questions[current];
+  document.getElementById('category').textContent=q.cat;
+  document.getElementById('q-number').textContent=`Question ${current+1} of ${questions.length}`;
+  document.getElementById('question').textContent=q.q;
+  document.getElementById('funfact').classList.remove('show');
+  document.getElementById('next-btn').classList.remove('show');
+  updateProgress();
+
+  const opts=document.getElementById('options');
+  opts.innerHTML='';
+  const letters=['A','B','C','D'];
+  q.o.forEach((text,i)=>{
+    const btn=document.createElement('div');
+    btn.className='option';
+    btn.innerHTML=`<span class="letter">${letters[i]}</span><span>${text}</span>`;
+    btn.addEventListener('click',()=>selectAnswer(i));
+    opts.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx){
+  if(answered) return;
+  answered=true;
+  const q=questions[current];
+  const opts=document.querySelectorAll('.option');
+  const card=document.getElementById('card');
+
+  if(idx===q.a){
+    // Correct
+    opts[idx].classList.add('correct');
+    score++; currentStreak++; if(currentStreak>bestStreak) bestStreak=currentStreak;
+  } else {
+    // Wrong
+    opts[idx].classList.add('wrong');
+    opts[q.a].classList.add('reveal-correct');
+    lives--; currentStreak=0;
+    renderHearts();
+    card.classList.add('shake');
+    setTimeout(()=>card.classList.remove('shake'),400);
+  }
+
+  // Disable all
+  opts.forEach(o=>o.classList.add('disabled'));
+  updateStreak();
+
+  // Show fun fact
+  document.getElementById('funfact').innerHTML=`<b>Did you know?</b> ${q.f}`;
+  document.getElementById('funfact').classList.add('show');
+
+  // Show next button
+  const nextBtn=document.getElementById('next-btn');
+  if(lives<=0){
+    nextBtn.textContent='See Results';
+  } else if(current>=questions.length-1){
+    nextBtn.textContent='See Results 🎉';
+  } else {
+    nextBtn.textContent='Next Question →';
+  }
+  nextBtn.classList.add('show');
+}
+
+document.getElementById('next-btn').addEventListener('click',()=>{
+  if(lives<=0){endGame(false);return;}
+  current++;
+  if(current>=questions.length){endGame(true);return;}
+  loadQuestion();
+});
+
+function endGame(completed){
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('progress-section').style.display='none';
+  const screen=document.getElementById('end-screen');
+  screen.classList.add('active');
+
+  const pct=questions.length>0?Math.round((score/questions.length)*100):0;
+  document.getElementById('end-score').textContent=`${score} / ${questions.length}`;
+
+  let emoji,title,msg;
+  if(completed && score===questions.length){
+    emoji='👨‍🍳';title='Perfect Chef!';msg='Flawless! You are a true foodie legend.';
+  } else if(completed && pct>=80){
+    emoji='🌟';title='Master Foodie!';msg='Incredible knowledge! You really know your food.';
+  } else if(completed && pct>=60){
+    emoji='😋';title='Great Taste!';msg='Solid performance — you know your way around a kitchen.';
+  } else if(completed){
+    emoji='🍽️';title='Not Bad!';msg='You made it through! Room to grow, but well done.';
+  } else if(score>=15){
+    emoji='💪';title='Good Run!';msg=`You got through ${current+1} questions — impressive!`;
+  } else if(score>=5){
+    emoji='🤔';title='Keep Learning!';msg='Every foodie starts somewhere. Try again!';
+  } else {
+    emoji='😅';title='Tough Luck!';msg='The food world is vast — give it another go!';
+  }
+
+  document.getElementById('end-emoji').textContent=emoji;
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-msg').textContent=msg;
+
+  document.getElementById('final-stats').innerHTML=`
+    <div class="final-stat"><div class="val">${score}</div><div class="lbl">CORRECT</div></div>
+    <div class="final-stat"><div class="val">${current+1-score}</div><div class="lbl">WRONG</div></div>
+    <div class="final-stat"><div class="val">🔥 ${bestStreak}</div><div class="lbl">BEST STREAK</div></div>
+    <div class="final-stat"><div class="val">${pct}%</div><div class="lbl">ACCURACY</div></div>
+  `;
+}
+
+// Keyboard support
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('start-screen').classList.contains('active')){
+    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();startGame();}
+    return;
+  }
+  if(document.getElementById('end-screen').classList.contains('active')){
+    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();startGame();}
+    return;
+  }
+  if(!answered){
+    const map={Digit1:0,Digit2:1,Digit3:2,Digit4:3,KeyA:0,KeyB:1,KeyC:2,KeyD:3};
+    if(e.code in map){e.preventDefault();selectAnswer(map[e.code]);}
+  } else {
+    if(e.code==='Space'||e.code==='Enter'){
+      e.preventDefault();document.getElementById('next-btn').click();
+    }
+  }
+});
+
+// Init: hide game, show start
+document.getElementById('game-screen').style.display='none';
+document.getElementById('progress-section').style.display='none';
+</script>
+</body>
+</html>
