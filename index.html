@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake 1v1</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #eee;
+    user-select: none;
+  }
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #ff6b6b, #74c0fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  #scoreboard {
+    display: flex;
+    gap: 60px;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  #s0 { color: #ff6b6b; }
+  #s1 { color: #74c0fc; }
+  .dead { opacity: 0.35; text-decoration: line-through; }
+  canvas {
+    border: 2px solid #333;
+    border-radius: 4px;
+    background: #111;
+  }
+  #info {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    opacity: 0.5;
+    text-align: center;
+    line-height: 1.6;
+  }
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #overlay.hidden { display: none; }
+  #overlay h2 { font-size: 2.4rem; margin-bottom: 8px; }
+  #overlay .subtitle { font-size: 1.1rem; margin-bottom: 20px; opacity: 0.7; }
+  #overlay .prompt {
+    font-size: 1rem;
+    padding: 12px 28px;
+    border: 2px solid #555;
+    border-radius: 8px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+  #controls-info {
+    display: flex;
+    gap: 60px;
+    margin-top: 18px;
+    font-size: 0.9rem;
+  }
+  #controls-info .ctrl-group { text-align: center; line-height: 1.8; }
+  #controls-info .ctrl-group b { display: block; margin-bottom: 2px; font-size: 1rem; }
+</style>
+</head>
+<body>
+
+<h1>Snake 1v1</h1>
+
+<div id="scoreboard">
+  <span id="s0">P1: 0</span>
+  <span id="s1">P2: 0</span>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="overlay">
+  <h2 id="overlay-title">Snake 1v1</h2>
+  <div class="subtitle" id="overlay-sub">Head to head on one keyboard</div>
+  <div class="prompt" id="overlay-prompt">Press SPACE to start</div>
+  <div id="controls-info">
+    <div class="ctrl-group" style="color:#ff6b6b">
+      <b>Player 1</b>
+      W A S D
+    </div>
+    <div class="ctrl-group" style="color:#74c0fc">
+      <b>Player 2</b>
+      Arrow Keys
+    </div>
+  </div>
+</div>
+
+<div id="info">
+  Eat food to grow &bull; Hit a wall or any snake to die &bull; Last one alive or highest score wins
+</div>
+
+<script>
+const CVS = document.getElementById('game');
+const CTX = CVS.getContext('2d');
+const COLS = 50, ROWS = 35, CELL = 16;
+CVS.width = COLS * CELL;
+CVS.height = ROWS * CELL;
+
+const overlay = document.getElementById('overlay');
+const overlayTitle = document.getElementById('overlay-title');
+const overlaySub = document.getElementById('overlay-sub');
+const overlayPrompt = document.getElementById('overlay-prompt');
+
+const DIR = { UP:{x:0,y:-1}, DOWN:{x:0,y:1}, LEFT:{x:-1,y:0}, RIGHT:{x:1,y:0} };
+
+const COLORS = [
+  ['#ff4444','#ff6b6b','#e03131'], // P1 red
+  ['#339af0','#74c0fc','#1c7ed6'], // P2 blue
+];
+
+const KEYS = [
+  ['KeyW','KeyA','KeyS','KeyD'],
+  ['ArrowUp','ArrowLeft','ArrowDown','ArrowRight'],
+];
+
+const LABELS = ['P1','P2'];
+
+let snakes, food, gameRunning, gameOver, tickTimer, tickInterval;
+
+function initGame() {
+  tickInterval = 120;
+  gameRunning = false;
+  gameOver = false;
+
+  const starts = [
+    { x: 8,        y: Math.floor(ROWS/2), dir: DIR.RIGHT },
+    { x: COLS - 9, y: Math.floor(ROWS/2), dir: DIR.LEFT  },
+  ];
+
+  snakes = starts.map((s, i) => {
+    const body = [];
+    for (let n = 0; n < 3; n++) {
+      body.push({ x: s.x - s.dir.x * n, y: s.y - s.dir.y * n });
+    }
+    return { body, dir:{...s.dir}, nextDir:{...s.dir}, alive:true, score:0, id:i };
+  });
+
+  food = [];
+  for (let i = 0; i < 4; i++) spawnFood();
+  updateScoreboard();
+  draw();
+}
+
+function spawnFood() {
+  const occupied = new Set();
+  snakes.forEach(s => s.body.forEach(b => occupied.add(b.x+','+b.y)));
+  food.forEach(f => occupied.add(f.x+','+f.y));
+  let attempts = 0;
+  while (attempts < 500) {
+    const x = Math.floor(Math.random() * COLS);
+    const y = Math.floor(Math.random() * ROWS);
+    if (!occupied.has(x+','+y)) { food.push({x,y}); return; }
+    attempts++;
+  }
+}
+
+function tick() {
+  snakes.forEach(s => { if (s.alive) s.dir = {...s.nextDir}; });
+
+  // Move heads
+  snakes.forEach(s => {
+    if (!s.alive) return;
+    const h = s.body[0];
+    s.body.unshift({ x: h.x + s.dir.x, y: h.y + s.dir.y });
+  });
+
+  // Body map (exclude heads)
+  const bodyMap = new Map();
+  snakes.forEach(s => {
+    if (!s.alive) return;
+    for (let i = 1; i < s.body.length; i++) {
+      bodyMap.set(s.body[i].x+','+s.body[i].y, s.id);
+    }
+  });
+
+  // Collisions
+  snakes.forEach(s => {
+    if (!s.alive) return;
+    const h = s.body[0];
+    // Walls
+    if (h.x < 0 || h.x >= COLS || h.y < 0 || h.y >= ROWS) { s.alive = false; return; }
+    // Body
+    if (bodyMap.has(h.x+','+h.y)) { s.alive = false; return; }
+    // Head-to-head
+    snakes.forEach(o => {
+      if (o.id === s.id || !o.alive) return;
+      const oh = o.body[0];
+      if (h.x === oh.x && h.y === oh.y) { s.alive = false; o.alive = false; }
+    });
+  });
+
+  // Eat food
+  snakes.forEach(s => {
+    if (!s.alive) return;
+    const h = s.body[0];
+    const fi = food.findIndex(f => f.x === h.x && f.y === h.y);
+    if (fi !== -1) {
+      s.score++;
+      food.splice(fi, 1);
+      spawnFood();
+      tickInterval = Math.max(60, tickInterval - 0.5);
+    } else {
+      s.body.pop();
+    }
+  });
+
+  // Check game over
+  const alive = snakes.filter(s => s.alive);
+  if (alive.length <= 1) { endGame(); return; }
+
+  updateScoreboard();
+  draw();
+  clearTimeout(tickTimer);
+  if (gameRunning) tickTimer = setTimeout(tick, tickInterval);
+}
+
+function endGame() {
+  gameRunning = false;
+  gameOver = true;
+  clearTimeout(tickTimer);
+  updateScoreboard();
+  draw();
+
+  const alive = snakes.filter(s => s.alive);
+  let winner;
+  if (alive.length === 1) {
+    winner = alive[0].id;
+  } else if (snakes[0].score > snakes[1].score) {
+    winner = 0;
+  } else if (snakes[1].score > snakes[0].score) {
+    winner = 1;
+  } else {
+    winner = -1;
+  }
+
+  if (winner === -1) {
+    overlayTitle.textContent = "It's a Tie!";
+    overlayTitle.style.color = '#eee';
+  } else {
+    overlayTitle.textContent = `${LABELS[winner]} Wins!`;
+    overlayTitle.style.color = COLORS[winner][0];
+  }
+  overlaySub.textContent = `${snakes[0].score} — ${snakes[1].score}`;
+  overlayPrompt.textContent = 'Press SPACE to play again';
+  overlay.classList.remove('hidden');
+}
+
+function updateScoreboard() {
+  snakes.forEach((s, i) => {
+    const el = document.getElementById('s'+i);
+    el.textContent = `${LABELS[i]}: ${s.score}`;
+    el.className = s.alive ? '' : 'dead';
+  });
+}
+
+function draw() {
+  CTX.fillStyle = '#111';
+  CTX.fillRect(0, 0, CVS.width, CVS.height);
+
+  // Grid
+  CTX.strokeStyle = '#1a1a1a';
+  CTX.lineWidth = 0.5;
+  for (let x = 0; x <= COLS; x++) {
+    CTX.beginPath(); CTX.moveTo(x*CELL,0); CTX.lineTo(x*CELL,CVS.height); CTX.stroke();
+  }
+  for (let y = 0; y <= ROWS; y++) {
+    CTX.beginPath(); CTX.moveTo(0,y*CELL); CTX.lineTo(CVS.width,y*CELL); CTX.stroke();
+  }
+
+  // Food
+  food.forEach(f => {
+    CTX.fillStyle = '#ffe066';
+    CTX.shadowColor = '#ffe066';
+    CTX.shadowBlur = 8;
+    CTX.beginPath();
+    CTX.arc(f.x*CELL+CELL/2, f.y*CELL+CELL/2, CELL/2-2, 0, Math.PI*2);
+    CTX.fill();
+    CTX.shadowBlur = 0;
+  });
+
+  // Snakes
+  snakes.forEach((s, si) => {
+    const [headC, bodyC, bodyAlt] = COLORS[si];
+    CTX.globalAlpha = s.alive ? 1 : 0.25;
+
+    s.body.forEach((seg, i) => {
+      const pad = i === 0 ? 0 : 1;
+      if (i === 0) {
+        CTX.fillStyle = headC;
+        CTX.shadowColor = headC;
+        CTX.shadowBlur = s.alive ? 6 : 0;
+      } else {
+        CTX.fillStyle = i % 2 === 0 ? bodyC : bodyAlt;
+        CTX.shadowBlur = 0;
+      }
+      roundRect(CTX, seg.x*CELL+pad, seg.y*CELL+pad, CELL-pad*2, CELL-pad*2, i===0?4:2);
+      CTX.fill();
+    });
+
+    // Eyes
+    if (s.body.length > 0) {
+      const h = s.body[0];
+      CTX.fillStyle = '#111';
+      CTX.shadowBlur = 0;
+      const hx = h.x*CELL+CELL/2, hy = h.y*CELL+CELL/2;
+      const ex = s.dir.x*2, ey = s.dir.y*2;
+      const px = -s.dir.y*3, py = s.dir.x*3;
+      CTX.beginPath(); CTX.arc(hx+ex+px,hy+ey+py,1.8,0,Math.PI*2); CTX.fill();
+      CTX.beginPath(); CTX.arc(hx+ex-px,hy+ey-py,1.8,0,Math.PI*2); CTX.fill();
+    }
+    CTX.globalAlpha = 1;
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+const opposite = (a,b) => a.x===-b.x && a.y===-b.y;
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (!gameRunning) {
+      if (gameOver) initGame();
+      overlay.classList.add('hidden');
+      gameRunning = true;
+      tickTimer = setTimeout(tick, tickInterval);
+    }
+    return;
+  }
+  const dirs = [DIR.UP, DIR.LEFT, DIR.DOWN, DIR.RIGHT];
+  KEYS.forEach((keySet, pi) => {
+    const ki = keySet.indexOf(e.code);
+    if (ki !== -1 && snakes[pi].alive) {
+      e.preventDefault();
+      const nd = dirs[ki];
+      if (!opposite(nd, snakes[pi].dir)) snakes[pi].nextDir = {...nd};
+    }
+  });
+});
+
+window.addEventListener('keydown', e => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+}, { passive: false });
+
+initGame();
+</script>
+</body>
+</html>
