@@ -327,13 +327,19 @@ function loadQuestion(){
   document.getElementById('next-btn').classList.remove('show');
   updateProgress();
 
+  // Shuffle options while tracking the correct answer
+  const indices=[0,1,2,3];
+  for(let i=indices.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[indices[i],indices[j]]=[indices[j],indices[i]];}
+  q._shuffled=indices;
+  q._correctIdx=indices.indexOf(q.a);
+
   const opts=document.getElementById('options');
   opts.innerHTML='';
   const letters=['A','B','C','D'];
-  q.o.forEach((text,i)=>{
+  indices.forEach((origIdx,i)=>{
     const btn=document.createElement('div');
     btn.className='option';
-    btn.innerHTML=`<span class="letter">${letters[i]}</span><span>${text}</span>`;
+    btn.innerHTML=`<span class="letter">${letters[i]}</span><span>${q.o[origIdx]}</span>`;
     btn.addEventListener('click',()=>selectAnswer(i));
     opts.appendChild(btn);
   });
@@ -346,14 +352,14 @@ function selectAnswer(idx){
   const opts=document.querySelectorAll('.option');
   const card=document.getElementById('card');
 
-  if(idx===q.a){
+  if(idx===q._correctIdx){
     // Correct
     opts[idx].classList.add('correct');
     score++; currentStreak++; if(currentStreak>bestStreak) bestStreak=currentStreak;
   } else {
     // Wrong
     opts[idx].classList.add('wrong');
-    opts[q.a].classList.add('reveal-correct');
+    opts[q._correctIdx].classList.add('reveal-correct');
     lives--; currentStreak=0;
     renderHearts();
     card.classList.add('shake');
