@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Paseo del Perro - Calendario 2026</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: linear-gradient(160deg, #FEFCE8 0%, #FFF7ED 30%, #F0F9FF 70%, #F5F3FF 100%); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const PEOPLE = [
+  { name: "Franco", emoji: "🔵", color: "#2563EB", bg: "#EFF6FF", bgActive: "#DBEAFE", border: "#93C5FD", gradient: "linear-gradient(135deg, #3B82F6, #2563EB)" },
+  { name: "Manés", emoji: "🟢", color: "#059669", bg: "#ECFDF5", bgActive: "#D1FAE5", border: "#6EE7B7", gradient: "linear-gradient(135deg, #10B981, #059669)" },
+  { name: "Santi", emoji: "🟠", color: "#D97706", bg: "#FFFBEB", bgActive: "#FEF3C7", border: "#FCD34D", gradient: "linear-gradient(135deg, #F59E0B, #D97706)" },
+];
+
+const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DAY_NAMES_SHORT = ["D","L","M","X","J","V","S"];
+const DAY_NAMES_FULL = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
+// Reference: Feb 28, 2026 = Santi (index 2)
+const REF_DATE = new Date(2026, 1, 28);
+const REF_INDEX = 2;
+
+function getPersonForDate(year, month, day) {
+  const d = new Date(year, month, day);
+  const diff = Math.floor((d - REF_DATE) / 86400000);
+  const idx = (((diff % 3) + REF_INDEX) % 3 + 3) % 3;
+  return PEOPLE[idx];
+}
+
+function getDaysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function getFirstDay(y, m) { return new Date(y, m, 1).getDay(); }
+
+function DogCalendar() {
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear] = useState(2026);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [view, setView] = useState("month");
+  const calRef = useRef(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const today = new Date();
+  const isToday = (y, m, d) => today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
+
+  const todayPerson = getPersonForDate(today.getFullYear(), today.getMonth(), today.getDate());
+  const tomorrowDate = new Date(today); tomorrowDate.setDate(today.getDate() + 1);
+  const tomorrowPerson = getPersonForDate(tomorrowDate.getFullYear(), tomorrowDate.getMonth(), tomorrowDate.getDate());
+
+  const navigate = (dir) => {
+    setSelectedDay(null);
+    setCurrentMonth(m => {
+      const next = m + dir;
+      if (next < 0) return 11;
+      if (next > 11) return 0;
+      return next;
+    });
+  };
+
+  function getMonthStats(y, m) {
+    const days = getDaysInMonth(y, m);
+    const counts = { Franco: 0, Manés: 0, Santi: 0 };
+    for (let d = 1; d <= days; d++) {
+      counts[getPersonForDate(y, m, d).name]++;
+    }
+    return counts;
+  }
+
+  const stats = getMonthStats(currentYear, currentMonth);
+
+  const renderMonthGrid = (year, month, compact = false) => {
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDay(year, month);
+    const cells = [];
+
+    for (let i = 0; i < firstDay; i++) {
+      cells.push(<div key={`e-${i}`} />);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const person = getPersonForDate(year, month, d);
+      const todayFlag = isToday(year, month, d);
+      const selected = !compact && selectedDay === d && currentMonth === month;
+
+      if (compact) {
+        cells.push(
+          <div key={d} style={{
+            width: "100%",
+            aspectRatio: "1",
+            borderRadius: 4,
+            backgroundColor: person.color,
+            opacity: todayFlag ? 1 : 0.65,
+            border: todayFlag ? "2px solid #1E293B" : "none",
+            boxSizing: "border-box",
+          }} />
+        );
+      } else {
+        cells.push(
+          <div
+            key={d}
+            onClick={() => setSelectedDay(selected ? null : d)}
+            style={{
+              backgroundColor: selected ? person.bgActive : person.bg,
+              border: `2px solid ${todayFlag ? person.color : selected ? person.color : "transparent"}`,
+              borderRadius: isMobile ? 10 : 14,
+              padding: isMobile ? "4px 2px" : "8px 4px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: isMobile ? 1 : 3,
+              position: "relative",
+              cursor: "pointer",
+              transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
+              transform: selected ? "scale(1.08)" : "scale(1)",
+              boxShadow: todayFlag
+                ? `0 0 0 3px ${person.color}33, 0 4px 12px ${person.color}22`
+                : selected
+                ? `0 4px 16px ${person.color}22`
+                : "0 1px 2px rgba(0,0,0,0.03)",
+              minHeight: isMobile ? 52 : 68,
+            }}
+          >
+            {todayFlag && (
+              <div style={{
+                position: "absolute",
+                top: isMobile ? -6 : -8,
+                right: isMobile ? -4 : -6,
+                background: person.gradient,
+                color: "white",
+                fontSize: isMobile ? 7 : 9,
+                fontWeight: 800,
+                padding: isMobile ? "1px 4px" : "2px 7px",
+                borderRadius: 6,
+                letterSpacing: "0.08em",
+                boxShadow: `0 2px 6px ${person.color}44`,
+              }}>HOY</div>
+            )}
+            <span style={{
+              fontSize: isMobile ? 12 : 14,
+              fontWeight: 700,
+              color: "#475569",
+            }}>{d}</span>
+            <span style={{ fontSize: isMobile ? 14 : 20 }}>🐕</span>
+            <span style={{
+              fontSize: isMobile ? 9 : 12,
+              fontWeight: 800,
+              color: person.color,
+              letterSpacing: "0.02em",
+              lineHeight: 1,
+            }}>{person.name}</span>
+          </div>
+        );
+      }
+    }
+    return cells;
+  };
+
+  const upcoming = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    upcoming.push({
+      date: d,
+      person: getPersonForDate(d.getFullYear(), d.getMonth(), d.getDate()),
+      label: i === 0 ? "Hoy" : i === 1 ? "Mañana" : d.toLocaleDateString("es", { weekday: "short", day: "numeric" }),
+    });
+  }
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(160deg, #FEFCE8 0%, #FFF7ED 30%, #F0F9FF 70%, #F5F3FF 100%)",
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      paddingBottom: 40,
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@700;800;900&display=swap" rel="stylesheet" />
+
+      {/* Hero header */}
+      <div style={{
+        background: "linear-gradient(135deg, #1E293B 0%, #334155 100%)",
+        padding: isMobile ? "28px 16px 20px" : "36px 32px 28px",
+        color: "white",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", top: -20, right: -20, fontSize: 120, opacity: 0.06,
+          transform: "rotate(-15deg)",
+        }}>🐶</div>
+        <div style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <span style={{ fontSize: 32 }}>🐕‍🦺</span>
+            <h1 style={{
+              fontFamily: "'Fraunces', serif",
+              fontSize: isMobile ? 26 : 34,
+              fontWeight: 900,
+              margin: 0,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+            }}>Paseo del Perro</h1>
+          </div>
+          <p style={{
+            color: "#94A3B8",
+            fontSize: isMobile ? 13 : 15,
+            margin: 0,
+            fontWeight: 500,
+          }}>Rotación: Santi → Franco → Manés · 2026</p>
+
+          {/* Today callout */}
+          <div style={{
+            marginTop: 16,
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+          }}>
+            <div style={{
+              background: todayPerson.gradient,
+              borderRadius: 12,
+              padding: isMobile ? "10px 16px" : "12px 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              flex: "1 1 auto",
+              minWidth: isMobile ? "100%" : 200,
+            }}>
+              <span style={{ fontSize: 24 }}>🐕</span>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.85, letterSpacing: "0.06em", textTransform: "uppercase" }}>Hoy le toca a</div>
+                <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 900, fontFamily: "'Fraunces', serif" }}>{todayPerson.name}</div>
+              </div>
+            </div>
+            <div style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 12,
+              padding: isMobile ? "10px 16px" : "12px 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              flex: "1 1 auto",
+              minWidth: isMobile ? "100%" : 180,
+            }}>
+              <span style={{ fontSize: 20 }}>⏭️</span>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, letterSpacing: "0.06em", textTransform: "uppercase" }}>Mañana</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: tomorrowPerson.color }}>{tomorrowPerson.name}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 620, margin: "0 auto", padding: isMobile ? "0 12px" : "0 24px" }}>
+
+        {/* View toggle */}
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 4,
+          marginTop: 20,
+          marginBottom: 16,
+          background: "#F1F5F9",
+          borderRadius: 12,
+          padding: 4,
+          maxWidth: 260,
+          margin: "20px auto 16px",
+        }}>
+          {[["month", "Mes"], ["year", "Año"]].map(([v, label]) => (
+            <button key={v} onClick={() => setView(v)} style={{
+              flex: 1,
+              padding: "8px 16px",
+              borderRadius: 10,
+              border: "none",
+              background: view === v ? "white" : "transparent",
+              color: view === v ? "#1E293B" : "#64748B",
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: "pointer",
+              boxShadow: view === v ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+              transition: "all 0.2s ease",
+              fontFamily: "inherit",
+            }}>{label}</button>
+          ))}
+        </div>
+
+        {view === "month" ? (
+          <>
+            {/* Month navigation */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 12,
+            }}>
+              <button onClick={() => navigate(-1)} style={{
+                background: "white",
+                border: "2px solid #E2E8F0",
+                borderRadius: 12,
+                width: 44, height: 44,
+                cursor: "pointer",
+                fontSize: 18,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#475569",
+                fontWeight: 700,
+                transition: "all 0.15s",
+                fontFamily: "inherit",
+              }}>←</button>
+              <h2 style={{
+                fontFamily: "'Fraunces', serif",
+                fontSize: isMobile ? 20 : 24,
+                fontWeight: 800,
+                color: "#1E293B",
+                margin: 0,
+                letterSpacing: "-0.02em",
+              }}>{MONTH_NAMES[currentMonth]} {currentYear}</h2>
+              <button onClick={() => navigate(1)} style={{
+                background: "white",
+                border: "2px solid #E2E8F0",
+                borderRadius: 12,
+                width: 44, height: 44,
+                cursor: "pointer",
+                fontSize: 18,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#475569",
+                fontWeight: 700,
+                transition: "all 0.15s",
+                fontFamily: "inherit",
+              }}>→</button>
+            </div>
+
+            {/* Upcoming 7 days */}
+            <div style={{ marginBottom: 16 }}>
+              <h3 style={{
+                fontSize: 16,
+                fontWeight: 800,
+                color: "#334155",
+                marginBottom: 10,
+                fontFamily: "'Fraunces', serif",
+              }}>Próximos 7 días</h3>
+              <div style={{
+                display: "flex",
+                gap: 8,
+                overflowX: "auto",
+                paddingBottom: 4,
+                WebkitOverflowScrolling: "touch",
+              }}>
+                {upcoming.map((item, i) => (
+                  <div key={i} style={{
+                    flexShrink: 0,
+                    width: isMobile ? 72 : 80,
+                    background: i === 0 ? item.person.gradient : "white",
+                    border: `1.5px solid ${i === 0 ? "transparent" : item.person.border}`,
+                    borderRadius: 14,
+                    padding: "10px 6px",
+                    textAlign: "center",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  }}>
+                    <div style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: i === 0 ? "rgba(255,255,255,0.85)" : "#94A3B8",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      marginBottom: 4,
+                    }}>{item.label}</div>
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>🐕</div>
+                    <div style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: i === 0 ? "white" : item.person.color,
+                    }}>{item.person.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats bar */}
+            <div style={{
+              display: "flex",
+              gap: 8,
+              marginBottom: 16,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}>
+              {PEOPLE.map(p => (
+                <div key={p.name} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "white",
+                  padding: "6px 14px",
+                  borderRadius: 10,
+                  border: `1.5px solid ${p.border}`,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.gradient }} />
+                  <span style={{ fontWeight: 800, color: p.color, fontSize: 13 }}>{p.name}</span>
+                  <span style={{ fontWeight: 600, color: "#94A3B8", fontSize: 12 }}>×{stats[p.name]}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar card */}
+            <div ref={calRef} style={{
+              background: "white",
+              borderRadius: 20,
+              padding: isMobile ? 12 : 20,
+              boxShadow: "0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.03)",
+            }}>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7, 1fr)",
+                gap: isMobile ? 4 : 6,
+                marginBottom: 6,
+              }}>
+                {(isMobile ? DAY_NAMES_SHORT : DAY_NAMES_FULL).map(d => (
+                  <div key={d} style={{
+                    textAlign: "center",
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: 700,
+                    color: "#94A3B8",
+                    padding: "6px 0",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}>{d}</div>
+                ))}
+              </div>
+
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7, 1fr)",
+                gap: isMobile ? 4 : 6,
+              }}>
+                {renderMonthGrid(currentYear, currentMonth)}
+              </div>
+            </div>
+
+            {/* Selected day detail */}
+            {selectedDay && (() => {
+              const person = getPersonForDate(currentYear, currentMonth, selectedDay);
+              const date = new Date(currentYear, currentMonth, selectedDay);
+              return (
+                <div style={{
+                  marginTop: 16,
+                  background: person.bg,
+                  border: `2px solid ${person.border}`,
+                  borderRadius: 16,
+                  padding: "16px 24px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  animation: "fadeIn 0.2s ease",
+                }}>
+                  <div style={{
+                    width: 48, height: 48,
+                    borderRadius: 14,
+                    background: person.gradient,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                    flexShrink: 0,
+                  }}>🐕</div>
+                  <div>
+                    <div style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>
+                      {date.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}
+                    </div>
+                    <div style={{
+                      fontSize: 22,
+                      fontWeight: 900,
+                      color: person.color,
+                      fontFamily: "'Fraunces', serif",
+                    }}>{person.name}</div>
+                  </div>
+                </div>
+              );
+            })()}
+
+          </>
+        ) : (
+          /* YEAR VIEW */
+          <div>
+            {/* Legend */}
+            <div style={{
+              display: "flex",
+              gap: 12,
+              justifyContent: "center",
+              marginBottom: 20,
+              flexWrap: "wrap",
+            }}>
+              {PEOPLE.map(p => (
+                <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: p.color }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: p.color }}>{p.name}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Current month — HERO */}
+            {(() => {
+              const cm = today.getMonth();
+              const cy = 2026;
+              const heroStats = getMonthStats(cy, cm);
+              return (
+                <div
+                  onClick={() => { setCurrentMonth(cm); setView("month"); setSelectedDay(null); }}
+                  style={{
+                    background: "white",
+                    borderRadius: 20,
+                    padding: isMobile ? 16 : 22,
+                    cursor: "pointer",
+                    boxShadow: "0 6px 32px rgba(59,130,246,0.12), 0 2px 8px rgba(0,0,0,0.04)",
+                    border: "2px solid #3B82F6",
+                    marginBottom: 24,
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div style={{
+                    position: "absolute",
+                    top: 0, right: 0,
+                    background: "linear-gradient(135deg, #3B82F6, #2563EB)",
+                    color: "white",
+                    fontSize: 10,
+                    fontWeight: 800,
+                    padding: "4px 12px",
+                    borderBottomLeftRadius: 10,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}>Mes actual</div>
+
+                  <h3 style={{
+                    fontFamily: "'Fraunces', serif",
+                    fontSize: isMobile ? 18 : 22,
+                    fontWeight: 800,
+                    color: "#1E293B",
+                    marginBottom: 12,
+                  }}>{MONTH_NAMES[cm]} {cy}</h3>
+
+                  <div style={{
+                    display: "flex",
+                    gap: 8,
+                    marginBottom: 12,
+                    flexWrap: "wrap",
+                  }}>
+                    {PEOPLE.map(p => (
+                      <span key={p.name} style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: p.color,
+                        background: p.bg,
+                        padding: "3px 10px",
+                        borderRadius: 8,
+                        border: `1px solid ${p.border}`,
+                      }}>{p.name}: {heroStats[p.name]}</span>
+                    ))}
+                  </div>
+
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(7, 1fr)",
+                    gap: 3,
+                  }}>
+                    {DAY_NAMES_SHORT.map(d => (
+                      <div key={d} style={{
+                        textAlign: "center",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        color: "#94A3B8",
+                        paddingBottom: 2,
+                      }}>{d}</div>
+                    ))}
+                    {renderMonthGrid(cy, cm, true)}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* All 12 months grid */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+              gap: 12,
+            }}>
+              {Array.from({ length: 12 }, (_, m) => {
+                const isCurrentMonth = m === today.getMonth();
+                return (
+                  <div
+                    key={m}
+                    onClick={() => { setCurrentMonth(m); setView("month"); setSelectedDay(null); }}
+                    style={{
+                      background: "white",
+                      borderRadius: 14,
+                      padding: isMobile ? 10 : 14,
+                      cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                      border: isCurrentMonth ? "2px solid #3B82F6" : "1.5px solid #E2E8F0",
+                      transition: "all 0.15s ease",
+                      opacity: isCurrentMonth ? 1 : 0.85,
+                    }}
+                  >
+                    <h4 style={{
+                      fontFamily: "'Fraunces', serif",
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: isCurrentMonth ? "#2563EB" : "#475569",
+                      marginBottom: 8,
+                    }}>{MONTH_NAMES[m]}</h4>
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, 1fr)",
+                      gap: 2,
+                    }}>
+                      {renderMonthGrid(2026, m, true)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{
+          textAlign: "center",
+          marginTop: 32,
+          color: "#94A3B8",
+          fontSize: 12,
+          fontWeight: 500,
+        }}>
+          <span>🐕 Paseo del Perro · Calendario 2026 🐕</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<DogCalendar />);
+</script>
+</body>
+</html>
