@@ -594,67 +594,222 @@ function DogCalendar() {
                         paddingBottom: 2,
                       }}>{d}</div>
                     ))}
-                    {renderMonthGrid(cy, cm, true)}
+                    {(() => {
+                      const daysInMonth = getDaysInMonth(cy, cm);
+                      const firstDay = getFirstDay(cy, cm);
+                      const cells = [];
+                      for (let i = 0; i < firstDay; i++) cells.push(<div key={`e-${i}`} />);
+                      for (let d = 1; d <= daysInMonth; d++) {
+                        const person = getPersonForDate(cy, cm, d);
+                        const todayFlag = isToday(cy, cm, d);
+                        const isPast = new Date(cy, cm, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                        cells.push(
+                          <div key={d} style={{
+                            width: "100%",
+                            aspectRatio: "1",
+                            borderRadius: 6,
+                            backgroundColor: person.color,
+                            opacity: isPast ? 0.35 : todayFlag ? 1 : 0.75,
+                            border: todayFlag ? "2.5px solid #1E293B" : "none",
+                            boxSizing: "border-box",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            position: "relative",
+                          }}>
+                            {todayFlag && (
+                              <div style={{
+                                width: 5, height: 5,
+                                borderRadius: "50%",
+                                background: "white",
+                              }} />
+                            )}
+                          </div>
+                        );
+                      }
+                      return cells;
+                    })()}
                   </div>
+                  <div style={{
+                    marginTop: 10,
+                    fontSize: 12,
+                    color: "#64748B",
+                    fontWeight: 500,
+                    textAlign: "center",
+                  }}>Toca para ver detalle →</div>
                 </div>
               );
             })()}
 
-            {/* All 12 months grid */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
-              gap: 12,
-            }}>
-              {Array.from({ length: 12 }, (_, m) => {
-                const isCurrentMonth = m === today.getMonth();
-                return (
-                  <div
-                    key={m}
-                    onClick={() => { setCurrentMonth(m); setView("month"); setSelectedDay(null); }}
-                    style={{
-                      background: "white",
-                      borderRadius: 14,
-                      padding: isMobile ? 10 : 14,
-                      cursor: "pointer",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                      border: isCurrentMonth ? "2px solid #3B82F6" : "1.5px solid #E2E8F0",
-                      transition: "all 0.15s ease",
-                      opacity: isCurrentMonth ? 1 : 0.85,
-                    }}
-                  >
-                    <h4 style={{
-                      fontFamily: "'Fraunces', serif",
-                      fontSize: 13,
-                      fontWeight: 800,
-                      color: isCurrentMonth ? "#2563EB" : "#475569",
-                      marginBottom: 8,
-                    }}>{MONTH_NAMES[m]}</h4>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(7, 1fr)",
-                      gap: 2,
-                    }}>
-                      {renderMonthGrid(2026, m, true)}
-                    </div>
+            {/* Upcoming months */}
+            {(() => {
+              const cm = today.getMonth();
+              const futureMonths = [];
+              for (let m = cm + 1; m < 12; m++) futureMonths.push(m);
+              if (futureMonths.length === 0) return null;
+              return (
+                <>
+                  <h3 style={{
+                    fontFamily: "'Fraunces', serif",
+                    fontSize: 18,
+                    fontWeight: 800,
+                    color: "#334155",
+                    marginBottom: 12,
+                    marginTop: 0,
+                  }}>Próximos meses</h3>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+                    gap: 12,
+                  }}>
+                    {futureMonths.map(m => {
+                      const monthStats = getMonthStats(2026, m);
+                      return (
+                        <div
+                          key={m}
+                          onClick={() => { setCurrentMonth(m); setView("month"); setSelectedDay(null); }}
+                          style={{
+                            background: "white",
+                            borderRadius: 14,
+                            padding: 12,
+                            cursor: "pointer",
+                            boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+                            border: "1.5px solid #E2E8F0",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          <div style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: 6,
+                          }}>
+                            <span style={{
+                              fontFamily: "'Fraunces', serif",
+                              fontSize: 14,
+                              fontWeight: 800,
+                              color: "#334155",
+                            }}>{MONTH_NAMES[m]}</span>
+                            <div style={{ display: "flex", gap: 3 }}>
+                              {PEOPLE.map(p => (
+                                <span key={p.name} style={{
+                                  fontSize: 9,
+                                  fontWeight: 700,
+                                  color: p.color,
+                                  background: p.bg,
+                                  padding: "1px 4px",
+                                  borderRadius: 3,
+                                }}>{monthStats[p.name]}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(7, 1fr)",
+                            gap: 2,
+                          }}>
+                            {renderMonthGrid(2026, m, true)}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </>
+              );
+            })()}
+
+            {/* Past months — collapsed */}
+            {(() => {
+              const cm = today.getMonth();
+              const pastMonths = [];
+              for (let m = 0; m < cm; m++) pastMonths.push(m);
+              if (pastMonths.length === 0) return null;
+              return (
+                <>
+                  <h3 style={{
+                    fontFamily: "'Fraunces', serif",
+                    fontSize: 16,
+                    fontWeight: 800,
+                    color: "#94A3B8",
+                    marginBottom: 12,
+                    marginTop: 28,
+                  }}>Meses anteriores</h3>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+                    gap: 10,
+                  }}>
+                    {pastMonths.map(m => {
+                      const monthStats = getMonthStats(2026, m);
+                      return (
+                        <div
+                          key={m}
+                          onClick={() => { setCurrentMonth(m); setView("month"); setSelectedDay(null); }}
+                          style={{
+                            background: "#F8FAFC",
+                            borderRadius: 12,
+                            padding: 10,
+                            cursor: "pointer",
+                            border: "1.5px solid #E2E8F0",
+                            opacity: 0.7,
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          <div style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: 6,
+                          }}>
+                            <span style={{
+                              fontFamily: "'Fraunces', serif",
+                              fontSize: 13,
+                              fontWeight: 800,
+                              color: "#94A3B8",
+                            }}>{MONTH_NAMES[m]}</span>
+                            <div style={{ display: "flex", gap: 3 }}>
+                              {PEOPLE.map(p => (
+                                <span key={p.name} style={{
+                                  fontSize: 9,
+                                  fontWeight: 700,
+                                  color: p.color,
+                                  opacity: 0.6,
+                                  background: p.bg,
+                                  padding: "1px 4px",
+                                  borderRadius: 3,
+                                }}>{monthStats[p.name]}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(7, 1fr)",
+                            gap: 2,
+                          }}>
+                            {renderMonthGrid(2026, m, true)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
-
-        {/* Footer */}
-        <div style={{
-          textAlign: "center",
-          marginTop: 32,
-          color: "#94A3B8",
-          fontSize: 12,
-          fontWeight: 500,
-        }}>
-          <span>🐕 Paseo del Perro · Calendario 2026 🐕</span>
-        </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        ::-webkit-scrollbar { height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+        button:active { transform: scale(0.95); }
+      `}</style>
     </div>
   );
 }
