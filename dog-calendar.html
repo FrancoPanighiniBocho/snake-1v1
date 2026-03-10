@@ -44,6 +44,16 @@ function getPersonForDate(year, month, day) {
 function getDaysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
 function getFirstDay(y, m) { return new Date(y, m, 1).getDay(); }
 
+const CUTOFF_HOUR = 6; // The "dog day" changes at 6:00 AM, not midnight
+
+function getEffectiveDate() {
+  const now = new Date();
+  if (now.getHours() < CUTOFF_HOUR) {
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  }
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
 function DogCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear] = useState(2026);
@@ -59,7 +69,9 @@ function DogCalendar() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const today = new Date();
+  const now = new Date();
+  const isLateNight = now.getHours() < CUTOFF_HOUR;
+  const today = getEffectiveDate();
   const isToday = (y, m, d) => today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
 
   const todayPerson = getPersonForDate(today.getFullYear(), today.getMonth(), today.getDate());
@@ -249,6 +261,25 @@ function DogCalendar() {
                 <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 900, fontFamily: "'Fraunces', serif" }}>{todayPerson.name}</div>
               </div>
             </div>
+            {isLateNight && (
+              <div style={{
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 10,
+                padding: isMobile ? "6px 12px" : "8px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+              }}>
+                <span style={{ fontSize: 14 }}>🌙</span>
+                <span style={{
+                  fontSize: isMobile ? 11 : 12,
+                  fontWeight: 600,
+                  color: "#CBD5E1",
+                }}>Turno del {today.toLocaleDateString("es", { weekday: "long", day: "numeric" })} (hasta las {CUTOFF_HOUR}:00)</span>
+              </div>
+            )}
             <div style={{
               background: "rgba(255,255,255,0.08)",
               border: "1px solid rgba(255,255,255,0.12)",
