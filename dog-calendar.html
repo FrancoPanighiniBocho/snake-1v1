@@ -227,6 +227,17 @@ function DogCalendar() {
       resolvedAt: null,
     });
 
+    // Send CallMeBot WhatsApp notifications
+    const tradeDate = fmtDateDisplay(formRequesterDate);
+    const notifMsg = `🔄 ${currentUser} quiere intercambiar el paseo de Sei del ${tradeDate}. Revisá el calendario.`;
+    if (formType === 'directed' && formTargetPerson) {
+      sendCallMeBot(formTargetPerson, notifMsg);
+    } else {
+      PEOPLE.forEach(p => {
+        if (p.name !== currentUser) sendCallMeBot(p.name, notifMsg);
+      });
+    }
+
     setShowTradeForm(false);
     resetForm();
     setTradeMsg({ text: '¡Intercambio solicitado!', tradeId: ref.key });
@@ -259,6 +270,12 @@ function DogCalendar() {
     };
 
     await db.ref().update(updates);
+
+    // Notify requester via CallMeBot
+    const d1 = fmtDateDisplay(date1);
+    const d2 = fmtDateDisplay(date2);
+    sendCallMeBot(trade.requester, `✅ ${acceptor} aceptó tu intercambio. ${d1} ↔ ${d2}`);
+
     setAcceptingTradeId(null);
     setSelectedAcceptorDate('');
   }
@@ -285,6 +302,22 @@ function DogCalendar() {
     "Franco": "5491169212260",
     "Santi": "5491136010141",
   };
+
+  // CallMeBot API keys — each person registers at https://www.callmebot.com/blog/free-api-whatsapp-messages/
+  // Save +34 644 37 67 94 on WhatsApp, send "I allow callmebot to send me messages", paste key here
+  const CALLMEBOT_KEYS = {
+    "Franco": "7368553",
+    "Manés": "XXXXXX",
+    "Santi": "XXXXXX",
+  };
+
+  function sendCallMeBot(personName, message) {
+    const phone = PHONE_NUMBERS[personName];
+    const apikey = CALLMEBOT_KEYS[personName];
+    if (!phone || !apikey || apikey === "XXXXXX") return;
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apikey}`;
+    fetch(url, { mode: 'no-cors' }).catch(() => {});
+  }
 
   function whatsappLink(trade) {
     const requesterDate = fmtDateDisplay(trade.requesterDate);
