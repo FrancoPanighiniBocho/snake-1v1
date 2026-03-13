@@ -229,7 +229,7 @@ function DogCalendar() {
 
     // Send CallMeBot WhatsApp notifications
     const tradeDate = fmtDateDisplay(formRequesterDate);
-    const notifMsg = `🔄 ${currentUser} quiere intercambiar el paseo de Sei del ${tradeDate}. Revisá el calendario.`;
+    const notifMsg = `🔄 ${currentUser} quiere intercambiar el paseo de Sei del ${tradeDate}. Revisá el calendario: https://francopanighinibocho.github.io/snake-1v1/dog-calendar.html`;
     if (formType === 'directed' && formTargetPerson) {
       sendCallMeBot(formTargetPerson, notifMsg);
     } else {
@@ -274,7 +274,7 @@ function DogCalendar() {
     // Notify requester via CallMeBot
     const d1 = fmtDateDisplay(date1);
     const d2 = fmtDateDisplay(date2);
-    sendCallMeBot(trade.requester, `✅ ${acceptor} aceptó tu intercambio. ${d1} ↔ ${d2}`);
+    sendCallMeBot(trade.requester, `✅ ${acceptor} aceptó tu intercambio. ${d1} ↔ ${d2} https://francopanighinibocho.github.io/snake-1v1/dog-calendar.html`);
 
     setAcceptingTradeId(null);
     setSelectedAcceptorDate('');

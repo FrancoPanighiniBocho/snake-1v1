@@ -80,9 +80,9 @@ async function main() {
   // Build message
   let message;
   if (wasSwapped) {
-    message = `🐕 Hoy te toca pasear a Sei, ${assignedPerson}! (intercambiado con ${originalPerson})`;
+    message = `🐕 Hoy te toca pasear a Sei, ${assignedPerson}! (intercambiado con ${originalPerson}) https://francopanighinibocho.github.io/snake-1v1/dog-calendar.html`;
   } else {
-    message = `🐕 Hoy te toca pasear a Sei, ${assignedPerson}!`;
+    message = `🐕 Hoy te toca pasear a Sei, ${assignedPerson}! https://francopanighinibocho.github.io/snake-1v1/dog-calendar.html`;
   }
 
   console.log(`Message: ${message}`);
