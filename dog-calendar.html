@@ -4,10 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Paseo del Perro - Calendario 2026</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: linear-gradient(160deg, #FEFCE8 0%, #FFF7ED 30%, #F0F9FF 70%, #F5F3FF 100%); }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -18,8 +21,36 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <script type="text/babel">
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect, useRef, useCallback } = React;
 
+// ═══════════════════════════════════════════════════════
+// FIREBASE CONFIG — Replace with your Firebase project values
+// See setup guide at the bottom of the plan doc
+// ═══════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC-YOBctE7AYs799KjMyP8iFzPLuqqABm0",
+  authDomain: "dog-calendar-96cd5.firebaseapp.com",
+  databaseURL: "https://dog-calendar-96cd5-default-rtdb.firebaseio.com",
+  projectId: "dog-calendar-96cd5",
+  storageBucket: "dog-calendar-96cd5.firebasestorage.app",
+  messagingSenderId: "1012069040252",
+  appId: "1:1012069040252:web:7ede21f6d18001b5f049f9"
+};
+
+let db = null;
+const firebaseReady = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+if (firebaseReady) {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+  } catch (e) {
+    console.error("Firebase init error:", e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
 const PEOPLE = [
   { name: "Franco", emoji: "🔵", color: "#2563EB", bg: "#EFF6FF", bgActive: "#DBEAFE", border: "#93C5FD", gradient: "linear-gradient(135deg, #3B82F6, #2563EB)" },
   { name: "Manés", emoji: "🟢", color: "#059669", bg: "#ECFDF5", bgActive: "#D1FAE5", border: "#6EE7B7", gradient: "linear-gradient(135deg, #10B981, #059669)" },
@@ -30,7 +61,6 @@ const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","A
 const DAY_NAMES_SHORT = ["D","L","M","X","J","V","S"];
 const DAY_NAMES_FULL = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
-// Reference: Feb 28, 2026 = Santi (index 2)
 const REF_DATE = new Date(2026, 1, 28);
 const REF_INDEX = 2;
 
@@ -44,7 +74,7 @@ function getPersonForDate(year, month, day) {
 function getDaysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
 function getFirstDay(y, m) { return new Date(y, m, 1).getDay(); }
 
-const CUTOFF_HOUR = 6; // The "dog day" changes at 6:00 AM, not midnight
+const CUTOFF_HOUR = 6;
 
 function getEffectiveDate() {
   const now = new Date();
@@ -54,7 +84,25 @@ function getEffectiveDate() {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
+function fmtDate(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function parseDate(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return { year: y, month: m - 1, day: d };
+}
+
+function fmtDateDisplay(dateStr) {
+  const { year, month, day } = parseDate(dateStr);
+  return new Date(year, month, day).toLocaleDateString("es", { weekday: "short", day: "numeric", month: "short" });
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════
 function DogCalendar() {
+  // Existing state
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear] = useState(2026);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -62,6 +110,27 @@ function DogCalendar() {
   const [view, setView] = useState("month");
   const calRef = useRef(null);
 
+  // Identity
+  const [currentUser, setCurrentUser] = useState(localStorage.getItem('dogCalendarUser'));
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Firebase state
+  const [overrides, setOverrides] = useState({});
+  const [trades, setTrades] = useState({});
+  const [fbConnected, setFbConnected] = useState(false);
+
+  // Trade UI state
+  const [showTradeForm, setShowTradeForm] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [tradeMsg, setTradeMsg] = useState(null);
+  const [acceptingTradeId, setAcceptingTradeId] = useState(null);
+  const [selectedAcceptorDate, setSelectedAcceptorDate] = useState('');
+  const [formType, setFormType] = useState('open');
+  const [formRequesterDate, setFormRequesterDate] = useState('');
+  const [formTargetPerson, setFormTargetPerson] = useState('');
+  const [formOfferDate, setFormOfferDate] = useState('');
+
+  // Mobile detection
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
@@ -69,116 +138,237 @@ function DogCalendar() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Firebase subscriptions
+  useEffect(() => {
+    if (!db) return;
+    const oRef = db.ref('overrides');
+    const tRef = db.ref('trades');
+    oRef.on('value', snap => { setOverrides(snap.val() || {}); setFbConnected(true); });
+    tRef.on('value', snap => { setTrades(snap.val() || {}); });
+    return () => { oRef.off(); tRef.off(); };
+  }, []);
+
+  // Date calculations
   const now = new Date();
   const isLateNight = now.getHours() < CUTOFF_HOUR;
   const today = getEffectiveDate();
+  const todayStr = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
   const isToday = (y, m, d) => today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
 
-  const todayPerson = getPersonForDate(today.getFullYear(), today.getMonth(), today.getDate());
+  // Expire old pending trades
+  useEffect(() => {
+    if (!db) return;
+    Object.entries(trades).forEach(([id, t]) => {
+      if (t.status === 'pending' && t.requesterDate < todayStr) {
+        db.ref(`trades/${id}`).update({ status: 'expired', resolvedAt: Date.now() });
+      }
+    });
+  }, [trades, todayStr]);
+
+  // Override-aware lookups
+  const getEffPerson = useCallback((year, month, day) => {
+    const ds = fmtDate(year, month, day);
+    if (overrides[ds]) return PEOPLE.find(p => p.name === overrides[ds].assignedTo) || getPersonForDate(year, month, day);
+    return getPersonForDate(year, month, day);
+  }, [overrides]);
+
+  const hasOverride = useCallback((year, month, day) => !!overrides[fmtDate(year, month, day)], [overrides]);
+
+  const todayPerson = getEffPerson(today.getFullYear(), today.getMonth(), today.getDate());
   const tomorrowDate = new Date(today); tomorrowDate.setDate(today.getDate() + 1);
-  const tomorrowPerson = getPersonForDate(tomorrowDate.getFullYear(), tomorrowDate.getMonth(), tomorrowDate.getDate());
+  const tomorrowPerson = getEffPerson(tomorrowDate.getFullYear(), tomorrowDate.getMonth(), tomorrowDate.getDate());
 
   const navigate = (dir) => {
     setSelectedDay(null);
-    setCurrentMonth(m => {
-      const next = m + dir;
-      if (next < 0) return 11;
-      if (next > 11) return 0;
-      return next;
-    });
+    setCurrentMonth(m => { const n = m + dir; return n < 0 ? 11 : n > 11 ? 0 : n; });
   };
 
   function getMonthStats(y, m) {
     const days = getDaysInMonth(y, m);
     const counts = { Franco: 0, Manés: 0, Santi: 0 };
-    for (let d = 1; d <= days; d++) {
-      counts[getPersonForDate(y, m, d).name]++;
-    }
+    for (let d = 1; d <= days; d++) counts[getEffPerson(y, m, d).name]++;
     return counts;
   }
 
+  // ═══════════════════════════════════════════
+  // TRADE LOGIC
+  // ═══════════════════════════════════════════
+  function getUpcomingDaysFor(personName) {
+    const days = [];
+    for (let i = 0; i <= 45; i++) {
+      const d = new Date(today); d.setDate(today.getDate() + i);
+      const ds = fmtDate(d.getFullYear(), d.getMonth(), d.getDate());
+      if (getEffPerson(d.getFullYear(), d.getMonth(), d.getDate()).name === personName) {
+        const hasPending = Object.values(trades).some(t =>
+          t.status === 'pending' && (t.requesterDate === ds || t.offerDate === ds)
+        );
+        if (!hasPending) days.push(ds);
+      }
+    }
+    return days;
+  }
+
+  async function createTrade() {
+    if (!db || !currentUser || !formRequesterDate) return;
+    if (formType === 'directed' && (!formTargetPerson || !formOfferDate)) return;
+
+    const ref = db.ref('trades').push();
+    await ref.set({
+      id: ref.key,
+      requester: currentUser,
+      requesterDate: formRequesterDate,
+      type: formType,
+      targetPerson: formType === 'directed' ? formTargetPerson : null,
+      offerDate: formType === 'directed' ? formOfferDate : null,
+      status: 'pending',
+      acceptedBy: null,
+      acceptorDate: null,
+      createdAt: Date.now(),
+      resolvedAt: null,
+    });
+
+    setShowTradeForm(false);
+    resetForm();
+    setTradeMsg({ text: '¡Intercambio solicitado!', tradeId: ref.key });
+    setTimeout(() => setTradeMsg(null), 5000);
+  }
+
+  async function acceptTrade(tradeId, acceptorDate) {
+    if (!db || !currentUser) return;
+    const trade = trades[tradeId];
+    if (!trade || trade.status !== 'pending') return;
+
+    const date1 = trade.requesterDate;
+    const date2 = trade.type === 'directed' ? trade.offerDate : acceptorDate;
+    const acceptor = currentUser;
+
+    const updates = {};
+    updates[`trades/${tradeId}/status`] = 'accepted';
+    updates[`trades/${tradeId}/acceptedBy`] = acceptor;
+    updates[`trades/${tradeId}/acceptorDate`] = acceptorDate || trade.offerDate;
+    updates[`trades/${tradeId}/resolvedAt`] = Date.now();
+    updates[`overrides/${date1}`] = {
+      assignedTo: acceptor,
+      originallyAssignedTo: trade.requester,
+      tradeId,
+    };
+    updates[`overrides/${date2}`] = {
+      assignedTo: trade.requester,
+      originallyAssignedTo: acceptor,
+      tradeId,
+    };
+
+    await db.ref().update(updates);
+    setAcceptingTradeId(null);
+    setSelectedAcceptorDate('');
+  }
+
+  async function declineTrade(id) {
+    if (!db) return;
+    await db.ref(`trades/${id}`).update({ status: 'declined', resolvedAt: Date.now() });
+  }
+
+  async function cancelTrade(id) {
+    if (!db) return;
+    await db.ref(`trades/${id}`).update({ status: 'cancelled', resolvedAt: Date.now() });
+  }
+
+  function resetForm() {
+    setFormType('open');
+    setFormRequesterDate('');
+    setFormTargetPerson('');
+    setFormOfferDate('');
+  }
+
+  function whatsappLink(trade) {
+    let msg;
+    if (trade.type === 'open') {
+      msg = `🐕 ¡Pedido de intercambio!\n${trade.requester} necesita que alguien cubra el ${fmtDateDisplay(trade.requesterDate)}.\n¿Alguien puede intercambiar? Revisá el calendario para aceptar.`;
+    } else {
+      msg = `🐕 ¡Pedido de intercambio!\n${trade.requester} quiere intercambiar con ${trade.targetPerson}:\n→ Vos cubrís el ${fmtDateDisplay(trade.requesterDate)}\n→ ${trade.requester} cubre tu ${fmtDateDisplay(trade.offerDate)}\nRevisá el calendario para aceptar o rechazar.`;
+    }
+    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  }
+
+  // Categorized trades
+  const pendingTrades = Object.entries(trades)
+    .filter(([_, t]) => t.status === 'pending')
+    .sort((a, b) => b[1].createdAt - a[1].createdAt);
+
+  const recentTrades = Object.entries(trades)
+    .filter(([_, t]) => t.status === 'accepted')
+    .sort((a, b) => (b[1].resolvedAt || 0) - (a[1].resolvedAt || 0))
+    .slice(0, 10);
+
+  // ═══════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════
   const stats = getMonthStats(currentYear, currentMonth);
+  const currentPersonObj = PEOPLE.find(p => p.name === currentUser);
 
   const renderMonthGrid = (year, month, compact = false) => {
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDay(year, month);
     const cells = [];
-
-    for (let i = 0; i < firstDay; i++) {
-      cells.push(<div key={`e-${i}`} />);
-    }
+    for (let i = 0; i < firstDay; i++) cells.push(<div key={`e-${i}`} />);
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const person = getPersonForDate(year, month, d);
+      const person = getEffPerson(year, month, d);
       const todayFlag = isToday(year, month, d);
       const selected = !compact && selectedDay === d && currentMonth === month;
+      const swapped = hasOverride(year, month, d);
 
       if (compact) {
         cells.push(
           <div key={d} style={{
-            width: "100%",
-            aspectRatio: "1",
-            borderRadius: 4,
+            width: "100%", aspectRatio: "1", borderRadius: 4,
             backgroundColor: person.color,
             opacity: todayFlag ? 1 : 0.65,
             border: todayFlag ? "2px solid #1E293B" : "none",
-            boxSizing: "border-box",
-          }} />
+            boxSizing: "border-box", position: "relative",
+          }}>
+            {swapped && <div style={{
+              position: "absolute", top: -1, right: -1,
+              width: 5, height: 5, borderRadius: "50%", background: "#EF4444",
+            }} />}
+          </div>
         );
       } else {
         cells.push(
-          <div
-            key={d}
-            onClick={() => setSelectedDay(selected ? null : d)}
-            style={{
-              backgroundColor: selected ? person.bgActive : person.bg,
-              border: `2px solid ${todayFlag ? person.color : selected ? person.color : "transparent"}`,
-              borderRadius: isMobile ? 10 : 14,
-              padding: isMobile ? "4px 2px" : "8px 4px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: isMobile ? 1 : 3,
-              position: "relative",
-              cursor: "pointer",
-              transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
-              transform: selected ? "scale(1.08)" : "scale(1)",
-              boxShadow: todayFlag
-                ? `0 0 0 3px ${person.color}33, 0 4px 12px ${person.color}22`
-                : selected
-                ? `0 4px 16px ${person.color}22`
-                : "0 1px 2px rgba(0,0,0,0.03)",
-              minHeight: isMobile ? 52 : 68,
-            }}
-          >
+          <div key={d} onClick={() => setSelectedDay(selected ? null : d)} style={{
+            backgroundColor: selected ? person.bgActive : person.bg,
+            border: `2px solid ${todayFlag ? person.color : selected ? person.color : "transparent"}`,
+            borderRadius: isMobile ? 10 : 14,
+            padding: isMobile ? "4px 2px" : "8px 4px",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            gap: isMobile ? 1 : 3, position: "relative", cursor: "pointer",
+            transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
+            transform: selected ? "scale(1.08)" : "scale(1)",
+            boxShadow: todayFlag
+              ? `0 0 0 3px ${person.color}33, 0 4px 12px ${person.color}22`
+              : selected ? `0 4px 16px ${person.color}22` : "0 1px 2px rgba(0,0,0,0.03)",
+            minHeight: isMobile ? 52 : 68,
+          }}>
             {todayFlag && (
               <div style={{
-                position: "absolute",
-                top: isMobile ? -6 : -8,
-                right: isMobile ? -4 : -6,
-                background: person.gradient,
-                color: "white",
-                fontSize: isMobile ? 7 : 9,
-                fontWeight: 800,
-                padding: isMobile ? "1px 4px" : "2px 7px",
-                borderRadius: 6,
-                letterSpacing: "0.08em",
-                boxShadow: `0 2px 6px ${person.color}44`,
+                position: "absolute", top: isMobile ? -6 : -8, right: isMobile ? -4 : -6,
+                background: person.gradient, color: "white",
+                fontSize: isMobile ? 7 : 9, fontWeight: 800,
+                padding: isMobile ? "1px 4px" : "2px 7px", borderRadius: 6,
+                letterSpacing: "0.08em", boxShadow: `0 2px 6px ${person.color}44`,
               }}>HOY</div>
             )}
-            <span style={{
-              fontSize: isMobile ? 12 : 14,
-              fontWeight: 700,
-              color: "#475569",
-            }}>{d}</span>
+            {swapped && (
+              <div style={{
+                position: "absolute", top: isMobile ? -4 : -6, left: isMobile ? -4 : -6,
+                fontSize: isMobile ? 10 : 12,
+              }}>🔄</div>
+            )}
+            <span style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: "#475569" }}>{d}</span>
             <span style={{ fontSize: isMobile ? 14 : 20 }}>🐕</span>
             <span style={{
-              fontSize: isMobile ? 9 : 12,
-              fontWeight: 800,
-              color: person.color,
-              letterSpacing: "0.02em",
-              lineHeight: 1,
+              fontSize: isMobile ? 9 : 12, fontWeight: 800, color: person.color,
+              letterSpacing: "0.02em", lineHeight: 1,
             }}>{person.name}</span>
           </div>
         );
@@ -189,15 +379,62 @@ function DogCalendar() {
 
   const upcoming = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
+    const d = new Date(today); d.setDate(today.getDate() + i);
     upcoming.push({
       date: d,
-      person: getPersonForDate(d.getFullYear(), d.getMonth(), d.getDate()),
+      person: getEffPerson(d.getFullYear(), d.getMonth(), d.getDate()),
+      swapped: hasOverride(d.getFullYear(), d.getMonth(), d.getDate()),
       label: i === 0 ? "Hoy" : i === 1 ? "Mañana" : d.toLocaleDateString("es", { weekday: "short", day: "numeric" }),
     });
   }
 
+  // ─── Identity selector (full-screen) ───
+  if (!currentUser) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(160deg, #1E293B 0%, #334155 50%, #475569 100%)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      }}>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@700;800;900&display=swap" rel="stylesheet" />
+        <div style={{ textAlign: "center", animation: "fadeIn 0.4s ease" }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>🐕‍🦺</div>
+          <h1 style={{
+            fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900,
+            color: "white", marginBottom: 8,
+          }}>Paseo del Perro</h1>
+          <p style={{ color: "#94A3B8", fontSize: 16, marginBottom: 32, fontWeight: 500 }}>¿Quién sos?</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 280, margin: "0 auto" }}>
+            {PEOPLE.map(p => (
+              <button key={p.name} onClick={() => {
+                localStorage.setItem('dogCalendarUser', p.name);
+                setCurrentUser(p.name);
+              }} style={{
+                background: p.gradient, border: "none", borderRadius: 16,
+                padding: "18px 24px", color: "white", fontSize: 20, fontWeight: 800,
+                fontFamily: "'Fraunces', serif", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+                boxShadow: `0 4px 20px ${p.color}44`, transition: "transform 0.15s ease",
+              }}>
+                <span style={{ fontSize: 28 }}>{p.emoji}</span>
+                {p.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Shared button style ───
+  const btnStyle = (bg, color, extra = {}) => ({
+    background: bg, color, border: "none", borderRadius: 10, padding: "8px 16px",
+    fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
+    transition: "all 0.15s ease", ...extra,
+  });
+
+  // ─── Main app ───
   return (
     <div style={{
       minHeight: "100vh",
@@ -207,89 +444,98 @@ function DogCalendar() {
     }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@700;800;900&display=swap" rel="stylesheet" />
 
-      {/* Hero header */}
+      {/* ═══ Hero header ═══ */}
       <div style={{
         background: "linear-gradient(135deg, #1E293B 0%, #334155 100%)",
         padding: isMobile ? "28px 16px 20px" : "36px 32px 28px",
-        color: "white",
-        position: "relative",
-        overflow: "hidden",
+        color: "white", position: "relative", overflow: "hidden",
       }}>
         <div style={{
           position: "absolute", top: -20, right: -20, fontSize: 120, opacity: 0.06,
           transform: "rotate(-15deg)",
         }}>🐶</div>
+
+        {/* User badge — top right */}
+        <div style={{ position: "absolute", top: 12, right: 16, zIndex: 10 }}>
+          <button onClick={() => setShowUserMenu(!showUserMenu)} style={{
+            background: currentPersonObj ? currentPersonObj.gradient : "#475569",
+            border: "none", borderRadius: 10, padding: "6px 14px",
+            color: "white", fontWeight: 700, fontSize: 13, cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit",
+          }}>
+            {currentPersonObj?.emoji} {currentUser} ▾
+          </button>
+          {showUserMenu && (
+            <div style={{
+              position: "absolute", top: "100%", right: 0, marginTop: 4,
+              background: "white", borderRadius: 12, padding: 6,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.2)", minWidth: 160, zIndex: 20,
+            }}>
+              {PEOPLE.map(p => (
+                <button key={p.name} onClick={() => {
+                  localStorage.setItem('dogCalendarUser', p.name);
+                  setCurrentUser(p.name);
+                  setShowUserMenu(false);
+                }} style={{
+                  display: "flex", alignItems: "center", gap: 8, width: "100%",
+                  padding: "10px 12px", border: "none", borderRadius: 8,
+                  background: currentUser === p.name ? p.bg : "transparent",
+                  cursor: "pointer", fontWeight: 700, fontSize: 14, color: p.color,
+                  fontFamily: "inherit",
+                }}>
+                  {p.emoji} {p.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <span style={{ fontSize: 32 }}>🐕‍🦺</span>
             <h1 style={{
-              fontFamily: "'Fraunces', serif",
-              fontSize: isMobile ? 26 : 34,
-              fontWeight: 900,
-              margin: 0,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.1,
+              fontFamily: "'Fraunces', serif", fontSize: isMobile ? 26 : 34,
+              fontWeight: 900, margin: 0, letterSpacing: "-0.03em", lineHeight: 1.1,
             }}>Paseo del Perro</h1>
           </div>
-          <p style={{
-            color: "#94A3B8",
-            fontSize: isMobile ? 13 : 15,
-            margin: 0,
-            fontWeight: 500,
-          }}>Rotación: Santi → Franco → Manés · 2026</p>
+          <p style={{ color: "#94A3B8", fontSize: isMobile ? 13 : 15, margin: 0, fontWeight: 500 }}>
+            Rotación: Santi → Franco → Manés · 2026
+          </p>
 
           {/* Today callout */}
-          <div style={{
-            marginTop: 16,
-            display: "flex",
-            gap: 10,
-            flexWrap: "wrap",
-          }}>
+          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <div style={{
-              background: todayPerson.gradient,
-              borderRadius: 12,
+              background: todayPerson.gradient, borderRadius: 12,
               padding: isMobile ? "10px 16px" : "12px 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              flex: "1 1 auto",
-              minWidth: isMobile ? "100%" : 200,
+              display: "flex", alignItems: "center", gap: 10,
+              flex: "1 1 auto", minWidth: isMobile ? "100%" : 200, position: "relative",
             }}>
               <span style={{ fontSize: 24 }}>🐕</span>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.85, letterSpacing: "0.06em", textTransform: "uppercase" }}>Hoy le toca a</div>
                 <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 900, fontFamily: "'Fraunces', serif" }}>{todayPerson.name}</div>
               </div>
+              {hasOverride(today.getFullYear(), today.getMonth(), today.getDate()) && (
+                <span style={{ fontSize: 10, background: "rgba(255,255,255,0.25)", borderRadius: 6, padding: "2px 8px", fontWeight: 700, marginLeft: "auto" }}>intercambiado</span>
+              )}
             </div>
             {isLateNight && (
               <div style={{
-                background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 10,
-                padding: isMobile ? "6px 12px" : "8px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                width: "100%",
+                background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 10, padding: isMobile ? "6px 12px" : "8px 14px",
+                display: "flex", alignItems: "center", gap: 8, width: "100%",
               }}>
                 <span style={{ fontSize: 14 }}>🌙</span>
-                <span style={{
-                  fontSize: isMobile ? 11 : 12,
-                  fontWeight: 600,
-                  color: "#CBD5E1",
-                }}>Turno del {today.toLocaleDateString("es", { weekday: "long", day: "numeric" })} (hasta las {CUTOFF_HOUR}:00)</span>
+                <span style={{ fontSize: isMobile ? 11 : 12, fontWeight: 600, color: "#CBD5E1" }}>
+                  Turno del {today.toLocaleDateString("es", { weekday: "long", day: "numeric" })} (hasta las {CUTOFF_HOUR}:00)
+                </span>
               </div>
             )}
             <div style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 12,
-              padding: isMobile ? "10px 16px" : "12px 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              flex: "1 1 auto",
-              minWidth: isMobile ? "100%" : 180,
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 12, padding: isMobile ? "10px 16px" : "12px 20px",
+              display: "flex", alignItems: "center", gap: 10,
+              flex: "1 1 auto", minWidth: isMobile ? "100%" : 180,
             }}>
               <span style={{ fontSize: 20 }}>⏭️</span>
               <div>
@@ -303,33 +549,33 @@ function DogCalendar() {
 
       <div style={{ maxWidth: 620, margin: "0 auto", padding: isMobile ? "0 12px" : "0 24px" }}>
 
+        {/* Firebase not configured banner */}
+        {!firebaseReady && (
+          <div style={{
+            background: "#FEF3C7", border: "1.5px solid #FCD34D", borderRadius: 12,
+            padding: "12px 16px", marginTop: 16, display: "flex", alignItems: "center", gap: 10,
+          }}>
+            <span style={{ fontSize: 18 }}>⚠️</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#92400E" }}>
+              Firebase no configurado. Agregá tu config en el código para habilitar intercambios.
+            </span>
+          </div>
+        )}
+
         {/* View toggle */}
         <div style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 4,
-          marginTop: 20,
-          marginBottom: 16,
-          background: "#F1F5F9",
-          borderRadius: 12,
-          padding: 4,
-          maxWidth: 260,
-          margin: "20px auto 16px",
+          display: "flex", justifyContent: "center", gap: 4,
+          background: "#F1F5F9", borderRadius: 12, padding: 4,
+          maxWidth: 260, margin: "20px auto 16px",
         }}>
           {[["month", "Mes"], ["year", "Año"]].map(([v, label]) => (
             <button key={v} onClick={() => setView(v)} style={{
-              flex: 1,
-              padding: "8px 16px",
-              borderRadius: 10,
-              border: "none",
+              flex: 1, padding: "8px 16px", borderRadius: 10, border: "none",
               background: view === v ? "white" : "transparent",
               color: view === v ? "#1E293B" : "#64748B",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: "pointer",
+              fontWeight: 700, fontSize: 14, cursor: "pointer",
               boxShadow: view === v ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-              transition: "all 0.2s ease",
-              fontFamily: "inherit",
+              transition: "all 0.2s ease", fontFamily: "inherit",
             }}>{label}</button>
           ))}
         </div>
@@ -337,91 +583,54 @@ function DogCalendar() {
         {view === "month" ? (
           <>
             {/* Month navigation */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 12,
-            }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <button onClick={() => navigate(-1)} style={{
-                background: "white",
-                border: "2px solid #E2E8F0",
-                borderRadius: 12,
-                width: 44, height: 44,
-                cursor: "pointer",
-                fontSize: 18,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#475569",
-                fontWeight: 700,
-                transition: "all 0.15s",
-                fontFamily: "inherit",
+                background: "white", border: "2px solid #E2E8F0", borderRadius: 12,
+                width: 44, height: 44, cursor: "pointer", fontSize: 18,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#475569", fontWeight: 700, transition: "all 0.15s", fontFamily: "inherit",
               }}>←</button>
               <h2 style={{
-                fontFamily: "'Fraunces', serif",
-                fontSize: isMobile ? 20 : 24,
-                fontWeight: 800,
-                color: "#1E293B",
-                margin: 0,
-                letterSpacing: "-0.02em",
+                fontFamily: "'Fraunces', serif", fontSize: isMobile ? 20 : 24,
+                fontWeight: 800, color: "#1E293B", margin: 0, letterSpacing: "-0.02em",
               }}>{MONTH_NAMES[currentMonth]} {currentYear}</h2>
               <button onClick={() => navigate(1)} style={{
-                background: "white",
-                border: "2px solid #E2E8F0",
-                borderRadius: 12,
-                width: 44, height: 44,
-                cursor: "pointer",
-                fontSize: 18,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#475569",
-                fontWeight: 700,
-                transition: "all 0.15s",
-                fontFamily: "inherit",
+                background: "white", border: "2px solid #E2E8F0", borderRadius: 12,
+                width: 44, height: 44, cursor: "pointer", fontSize: 18,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#475569", fontWeight: 700, transition: "all 0.15s", fontFamily: "inherit",
               }}>→</button>
             </div>
 
             {/* Upcoming 7 days */}
             <div style={{ marginBottom: 16 }}>
               <h3 style={{
-                fontSize: 16,
-                fontWeight: 800,
-                color: "#334155",
-                marginBottom: 10,
+                fontSize: 16, fontWeight: 800, color: "#334155", marginBottom: 10,
                 fontFamily: "'Fraunces', serif",
               }}>Próximos 7 días</h3>
               <div style={{
-                display: "flex",
-                gap: 8,
-                overflowX: "auto",
-                paddingBottom: 4,
+                display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4,
                 WebkitOverflowScrolling: "touch",
               }}>
                 {upcoming.map((item, i) => (
                   <div key={i} style={{
-                    flexShrink: 0,
-                    width: isMobile ? 72 : 80,
+                    flexShrink: 0, width: isMobile ? 72 : 80,
                     background: i === 0 ? item.person.gradient : "white",
                     border: `1.5px solid ${i === 0 ? "transparent" : item.person.border}`,
-                    borderRadius: 14,
-                    padding: "10px 6px",
-                    textAlign: "center",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                    borderRadius: 14, padding: "10px 6px", textAlign: "center",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)", position: "relative",
                   }}>
+                    {item.swapped && (
+                      <div style={{ position: "absolute", top: 4, right: 4, fontSize: 9 }}>🔄</div>
+                    )}
                     <div style={{
-                      fontSize: 10,
-                      fontWeight: 700,
+                      fontSize: 10, fontWeight: 700,
                       color: i === 0 ? "rgba(255,255,255,0.85)" : "#94A3B8",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      marginBottom: 4,
+                      textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4,
                     }}>{item.label}</div>
                     <div style={{ fontSize: 18, marginBottom: 4 }}>🐕</div>
                     <div style={{
-                      fontSize: 12,
-                      fontWeight: 800,
+                      fontSize: 12, fontWeight: 800,
                       color: i === 0 ? "white" : item.person.color,
                     }}>{item.person.name}</div>
                   </div>
@@ -430,23 +639,12 @@ function DogCalendar() {
             </div>
 
             {/* Stats bar */}
-            <div style={{
-              display: "flex",
-              gap: 8,
-              marginBottom: 16,
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 16, justifyContent: "center", flexWrap: "wrap" }}>
               {PEOPLE.map(p => (
                 <div key={p.name} style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  background: "white",
-                  padding: "6px 14px",
-                  borderRadius: 10,
-                  border: `1.5px solid ${p.border}`,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "white", padding: "6px 14px", borderRadius: 10,
+                  border: `1.5px solid ${p.border}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 }}>
                   <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.gradient }} />
                   <span style={{ fontWeight: 800, color: p.color, fontSize: 13 }}>{p.name}</span>
@@ -457,75 +655,52 @@ function DogCalendar() {
 
             {/* Calendar card */}
             <div ref={calRef} style={{
-              background: "white",
-              borderRadius: 20,
-              padding: isMobile ? 12 : 20,
+              background: "white", borderRadius: 20, padding: isMobile ? 12 : 20,
               boxShadow: "0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.03)",
             }}>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
-                gap: isMobile ? 4 : 6,
-                marginBottom: 6,
-              }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
                 {(isMobile ? DAY_NAMES_SHORT : DAY_NAMES_FULL).map(d => (
                   <div key={d} style={{
-                    textAlign: "center",
-                    fontSize: isMobile ? 11 : 12,
-                    fontWeight: 700,
-                    color: "#94A3B8",
-                    padding: "6px 0",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
+                    textAlign: "center", fontSize: isMobile ? 11 : 12, fontWeight: 700,
+                    color: "#94A3B8", padding: "6px 0", letterSpacing: "0.08em", textTransform: "uppercase",
                   }}>{d}</div>
                 ))}
               </div>
-
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
-                gap: isMobile ? 4 : 6,
-              }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6 }}>
                 {renderMonthGrid(currentYear, currentMonth)}
               </div>
             </div>
 
             {/* Selected day detail */}
             {selectedDay && (() => {
-              const person = getPersonForDate(currentYear, currentMonth, selectedDay);
+              const person = getEffPerson(currentYear, currentMonth, selectedDay);
               const date = new Date(currentYear, currentMonth, selectedDay);
+              const ds = fmtDate(currentYear, currentMonth, selectedDay);
+              const override = overrides[ds];
               return (
                 <div style={{
-                  marginTop: 16,
-                  background: person.bg,
-                  border: `2px solid ${person.border}`,
-                  borderRadius: 16,
-                  padding: "16px 24px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 16,
-                  animation: "fadeIn 0.2s ease",
+                  marginTop: 16, background: person.bg, border: `2px solid ${person.border}`,
+                  borderRadius: 16, padding: "16px 24px",
+                  display: "flex", alignItems: "center", gap: 16, animation: "fadeIn 0.2s ease",
                 }}>
                   <div style={{
-                    width: 48, height: 48,
-                    borderRadius: 14,
-                    background: person.gradient,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 24,
-                    flexShrink: 0,
+                    width: 48, height: 48, borderRadius: 14, background: person.gradient,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 24, flexShrink: 0,
                   }}>🐕</div>
                   <div>
                     <div style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>
                       {date.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}
                     </div>
                     <div style={{
-                      fontSize: 22,
-                      fontWeight: 900,
-                      color: person.color,
+                      fontSize: 22, fontWeight: 900, color: person.color,
                       fontFamily: "'Fraunces', serif",
                     }}>{person.name}</div>
+                    {override && (
+                      <div style={{ fontSize: 12, color: "#64748B", fontWeight: 600, marginTop: 4 }}>
+                        🔄 Intercambiado (originalmente {override.originallyAssignedTo})
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -533,16 +708,10 @@ function DogCalendar() {
 
           </>
         ) : (
-          /* YEAR VIEW */
+          /* ═══ YEAR VIEW ═══ */
           <div>
             {/* Legend */}
-            <div style={{
-              display: "flex",
-              gap: 12,
-              justifyContent: "center",
-              marginBottom: 20,
-              flexWrap: "wrap",
-            }}>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
               {PEOPLE.map(p => (
                 <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <div style={{ width: 12, height: 12, borderRadius: 3, background: p.color }} />
@@ -560,70 +729,34 @@ function DogCalendar() {
                 <div
                   onClick={() => { setCurrentMonth(cm); setView("month"); setSelectedDay(null); }}
                   style={{
-                    background: "white",
-                    borderRadius: 20,
-                    padding: isMobile ? 16 : 22,
+                    background: "white", borderRadius: 20, padding: isMobile ? 16 : 22,
                     cursor: "pointer",
                     boxShadow: "0 6px 32px rgba(59,130,246,0.12), 0 2px 8px rgba(0,0,0,0.04)",
-                    border: "2px solid #3B82F6",
-                    marginBottom: 24,
-                    position: "relative",
-                    overflow: "hidden",
+                    border: "2px solid #3B82F6", marginBottom: 24, position: "relative", overflow: "hidden",
                   }}
                 >
                   <div style={{
-                    position: "absolute",
-                    top: 0, right: 0,
+                    position: "absolute", top: 0, right: 0,
                     background: "linear-gradient(135deg, #3B82F6, #2563EB)",
-                    color: "white",
-                    fontSize: 10,
-                    fontWeight: 800,
-                    padding: "4px 12px",
-                    borderBottomLeftRadius: 10,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
+                    color: "white", fontSize: 10, fontWeight: 800,
+                    padding: "4px 12px", borderBottomLeftRadius: 10,
+                    letterSpacing: "0.06em", textTransform: "uppercase",
                   }}>Mes actual</div>
-
                   <h3 style={{
-                    fontFamily: "'Fraunces', serif",
-                    fontSize: isMobile ? 18 : 22,
-                    fontWeight: 800,
-                    color: "#1E293B",
-                    marginBottom: 12,
+                    fontFamily: "'Fraunces', serif", fontSize: isMobile ? 18 : 22,
+                    fontWeight: 800, color: "#1E293B", marginBottom: 12,
                   }}>{MONTH_NAMES[cm]} {cy}</h3>
-
-                  <div style={{
-                    display: "flex",
-                    gap: 8,
-                    marginBottom: 12,
-                    flexWrap: "wrap",
-                  }}>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
                     {PEOPLE.map(p => (
                       <span key={p.name} style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: p.color,
-                        background: p.bg,
-                        padding: "3px 10px",
-                        borderRadius: 8,
-                        border: `1px solid ${p.border}`,
+                        fontSize: 12, fontWeight: 700, color: p.color,
+                        background: p.bg, padding: "3px 10px", borderRadius: 8, border: `1px solid ${p.border}`,
                       }}>{p.name}: {heroStats[p.name]}</span>
                     ))}
                   </div>
-
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    gap: 3,
-                  }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3 }}>
                     {DAY_NAMES_SHORT.map(d => (
-                      <div key={d} style={{
-                        textAlign: "center",
-                        fontSize: 9,
-                        fontWeight: 700,
-                        color: "#94A3B8",
-                        paddingBottom: 2,
-                      }}>{d}</div>
+                      <div key={d} style={{ textAlign: "center", fontSize: 9, fontWeight: 700, color: "#94A3B8", paddingBottom: 2 }}>{d}</div>
                     ))}
                     {(() => {
                       const daysInMonth = getDaysInMonth(cy, cm);
@@ -631,30 +764,19 @@ function DogCalendar() {
                       const cells = [];
                       for (let i = 0; i < firstDay; i++) cells.push(<div key={`e-${i}`} />);
                       for (let d = 1; d <= daysInMonth; d++) {
-                        const person = getPersonForDate(cy, cm, d);
+                        const person = getEffPerson(cy, cm, d);
                         const todayFlag = isToday(cy, cm, d);
                         const isPast = new Date(cy, cm, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
                         cells.push(
                           <div key={d} style={{
-                            width: "100%",
-                            aspectRatio: "1",
-                            borderRadius: 6,
+                            width: "100%", aspectRatio: "1", borderRadius: 6,
                             backgroundColor: person.color,
                             opacity: isPast ? 0.35 : todayFlag ? 1 : 0.75,
                             border: todayFlag ? "2.5px solid #1E293B" : "none",
-                            boxSizing: "border-box",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            position: "relative",
+                            boxSizing: "border-box", display: "flex",
+                            alignItems: "center", justifyContent: "center", position: "relative",
                           }}>
-                            {todayFlag && (
-                              <div style={{
-                                width: 5, height: 5,
-                                borderRadius: "50%",
-                                background: "white",
-                              }} />
-                            )}
+                            {todayFlag && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "white" }} />}
                           </div>
                         );
                       }
@@ -662,11 +784,7 @@ function DogCalendar() {
                     })()}
                   </div>
                   <div style={{
-                    marginTop: 10,
-                    fontSize: 12,
-                    color: "#64748B",
-                    fontWeight: 500,
-                    textAlign: "center",
+                    marginTop: 10, fontSize: 12, color: "#64748B", fontWeight: 500, textAlign: "center",
                   }}>Toca para ver detalle →</div>
                 </div>
               );
@@ -681,12 +799,8 @@ function DogCalendar() {
               return (
                 <>
                   <h3 style={{
-                    fontFamily: "'Fraunces', serif",
-                    fontSize: 18,
-                    fontWeight: 800,
-                    color: "#334155",
-                    marginBottom: 12,
-                    marginTop: 0,
+                    fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800,
+                    color: "#334155", marginBottom: 12, marginTop: 0,
                   }}>Próximos meses</h3>
                   <div style={{
                     display: "grid",
@@ -696,49 +810,25 @@ function DogCalendar() {
                     {futureMonths.map(m => {
                       const monthStats = getMonthStats(2026, m);
                       return (
-                        <div
-                          key={m}
-                          onClick={() => { setCurrentMonth(m); setView("month"); setSelectedDay(null); }}
-                          style={{
-                            background: "white",
-                            borderRadius: 14,
-                            padding: 12,
-                            cursor: "pointer",
-                            boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
-                            border: "1.5px solid #E2E8F0",
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          <div style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: 6,
-                          }}>
+                        <div key={m} onClick={() => { setCurrentMonth(m); setView("month"); setSelectedDay(null); }} style={{
+                          background: "white", borderRadius: 14, padding: 12, cursor: "pointer",
+                          boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+                          border: "1.5px solid #E2E8F0", transition: "all 0.2s ease",
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                             <span style={{
-                              fontFamily: "'Fraunces', serif",
-                              fontSize: 14,
-                              fontWeight: 800,
-                              color: "#334155",
+                              fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 800, color: "#334155",
                             }}>{MONTH_NAMES[m]}</span>
                             <div style={{ display: "flex", gap: 3 }}>
                               {PEOPLE.map(p => (
                                 <span key={p.name} style={{
-                                  fontSize: 9,
-                                  fontWeight: 700,
-                                  color: p.color,
-                                  background: p.bg,
-                                  padding: "1px 4px",
-                                  borderRadius: 3,
+                                  fontSize: 9, fontWeight: 700, color: p.color,
+                                  background: p.bg, padding: "1px 4px", borderRadius: 3,
                                 }}>{monthStats[p.name]}</span>
                               ))}
                             </div>
                           </div>
-                          <div style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(7, 1fr)",
-                            gap: 2,
-                          }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
                             {renderMonthGrid(2026, m, true)}
                           </div>
                         </div>
@@ -749,7 +839,7 @@ function DogCalendar() {
               );
             })()}
 
-            {/* Past months — collapsed */}
+            {/* Past months */}
             {(() => {
               const cm = today.getMonth();
               const pastMonths = [];
@@ -758,12 +848,8 @@ function DogCalendar() {
               return (
                 <>
                   <h3 style={{
-                    fontFamily: "'Fraunces', serif",
-                    fontSize: 16,
-                    fontWeight: 800,
-                    color: "#94A3B8",
-                    marginBottom: 12,
-                    marginTop: 28,
+                    fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800,
+                    color: "#94A3B8", marginBottom: 12, marginTop: 28,
                   }}>Meses anteriores</h3>
                   <div style={{
                     display: "grid",
@@ -773,50 +859,24 @@ function DogCalendar() {
                     {pastMonths.map(m => {
                       const monthStats = getMonthStats(2026, m);
                       return (
-                        <div
-                          key={m}
-                          onClick={() => { setCurrentMonth(m); setView("month"); setSelectedDay(null); }}
-                          style={{
-                            background: "#F8FAFC",
-                            borderRadius: 12,
-                            padding: 10,
-                            cursor: "pointer",
-                            border: "1.5px solid #E2E8F0",
-                            opacity: 0.7,
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          <div style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: 6,
-                          }}>
+                        <div key={m} onClick={() => { setCurrentMonth(m); setView("month"); setSelectedDay(null); }} style={{
+                          background: "#F8FAFC", borderRadius: 12, padding: 10, cursor: "pointer",
+                          border: "1.5px solid #E2E8F0", opacity: 0.7, transition: "all 0.2s ease",
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                             <span style={{
-                              fontFamily: "'Fraunces', serif",
-                              fontSize: 13,
-                              fontWeight: 800,
-                              color: "#94A3B8",
+                              fontFamily: "'Fraunces', serif", fontSize: 13, fontWeight: 800, color: "#94A3B8",
                             }}>{MONTH_NAMES[m]}</span>
                             <div style={{ display: "flex", gap: 3 }}>
                               {PEOPLE.map(p => (
                                 <span key={p.name} style={{
-                                  fontSize: 9,
-                                  fontWeight: 700,
-                                  color: p.color,
-                                  opacity: 0.6,
-                                  background: p.bg,
-                                  padding: "1px 4px",
-                                  borderRadius: 3,
+                                  fontSize: 9, fontWeight: 700, color: p.color, opacity: 0.6,
+                                  background: p.bg, padding: "1px 4px", borderRadius: 3,
                                 }}>{monthStats[p.name]}</span>
                               ))}
                             </div>
                           </div>
-                          <div style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(7, 1fr)",
-                            gap: 2,
-                          }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
                             {renderMonthGrid(2026, m, true)}
                           </div>
                         </div>
@@ -828,6 +888,315 @@ function DogCalendar() {
             })()}
           </div>
         )}
+
+        {/* ═══════════════════════════════════════════════════ */}
+        {/* TRADES SECTION                                     */}
+        {/* ═══════════════════════════════════════════════════ */}
+        {firebaseReady && (
+          <div style={{ marginTop: 28 }}>
+
+            {/* Request trade button */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+              <button onClick={() => { resetForm(); setShowTradeForm(!showTradeForm); }} style={{
+                ...btnStyle(currentPersonObj?.gradient || "#2563EB", "white"),
+                padding: "12px 20px", fontSize: 15, borderRadius: 14, flex: 1,
+                boxShadow: `0 4px 16px ${currentPersonObj?.color || "#2563EB"}33`,
+              }}>
+                {showTradeForm ? "✕ Cancelar" : "🔄 Solicitar intercambio"}
+              </button>
+            </div>
+
+            {/* Success message */}
+            {tradeMsg && (
+              <div style={{
+                background: "#ECFDF5", border: "1.5px solid #6EE7B7", borderRadius: 12,
+                padding: "12px 16px", marginBottom: 16,
+                display: "flex", alignItems: "center", gap: 10, animation: "fadeIn 0.3s ease",
+              }}>
+                <span style={{ fontSize: 18 }}>✅</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#065F46", flex: 1 }}>{tradeMsg.text}</span>
+                {tradeMsg.tradeId && trades[tradeMsg.tradeId] && (
+                  <a href={whatsappLink(trades[tradeMsg.tradeId])} target="_blank" rel="noopener" style={{
+                    ...btnStyle("#25D366", "white"),
+                    textDecoration: "none", display: "flex", alignItems: "center", gap: 6,
+                  }}>📱 WhatsApp</a>
+                )}
+              </div>
+            )}
+
+            {/* ─── Trade request form ─── */}
+            {showTradeForm && (
+              <div style={{
+                background: "white", borderRadius: 20, padding: isMobile ? 16 : 24,
+                boxShadow: "0 4px 24px rgba(0,0,0,0.08)", marginBottom: 16,
+                animation: "slideUp 0.3s ease", border: "1.5px solid #E2E8F0",
+              }}>
+                <h3 style={{
+                  fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800,
+                  color: "#1E293B", marginBottom: 16,
+                }}>Nuevo intercambio</h3>
+
+                {/* Trade type toggle */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginBottom: 6, display: "block", textTransform: "uppercase", letterSpacing: "0.06em" }}>Tipo</label>
+                  <div style={{ display: "flex", gap: 4, background: "#F1F5F9", borderRadius: 10, padding: 3 }}>
+                    {[["open", "🔓 Abierto"], ["directed", "🎯 Dirigido"]].map(([v, label]) => (
+                      <button key={v} onClick={() => { setFormType(v); setFormTargetPerson(''); setFormOfferDate(''); }} style={{
+                        flex: 1, padding: "8px 12px", borderRadius: 8, border: "none",
+                        background: formType === v ? "white" : "transparent",
+                        color: formType === v ? "#1E293B" : "#64748B",
+                        fontWeight: 700, fontSize: 13, cursor: "pointer",
+                        boxShadow: formType === v ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                        fontFamily: "inherit",
+                      }}>{label}</button>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 6, fontWeight: 500 }}>
+                    {formType === 'open' ? "Cualquiera puede aceptar tu intercambio" : "Solo la persona elegida puede aceptar"}
+                  </p>
+                </div>
+
+                {/* Your day to trade */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginBottom: 6, display: "block", textTransform: "uppercase", letterSpacing: "0.06em" }}>Tu día a intercambiar</label>
+                  <select value={formRequesterDate} onChange={e => setFormRequesterDate(e.target.value)} style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 10,
+                    border: "1.5px solid #E2E8F0", fontSize: 14, fontWeight: 600,
+                    fontFamily: "inherit", background: "white", color: "#1E293B",
+                  }}>
+                    <option value="">Elegí un día...</option>
+                    {getUpcomingDaysFor(currentUser).map(ds => (
+                      <option key={ds} value={ds}>{fmtDateDisplay(ds)}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Directed: target person */}
+                {formType === 'directed' && (
+                  <>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginBottom: 6, display: "block", textTransform: "uppercase", letterSpacing: "0.06em" }}>¿Con quién?</label>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {PEOPLE.filter(p => p.name !== currentUser).map(p => (
+                          <button key={p.name} onClick={() => { setFormTargetPerson(p.name); setFormOfferDate(''); }} style={{
+                            flex: 1, padding: "10px", borderRadius: 10,
+                            border: `2px solid ${formTargetPerson === p.name ? p.color : "#E2E8F0"}`,
+                            background: formTargetPerson === p.name ? p.bg : "white",
+                            cursor: "pointer", fontWeight: 700, fontSize: 14, color: p.color,
+                            fontFamily: "inherit", transition: "all 0.15s ease",
+                          }}>
+                            {p.emoji} {p.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Directed: offer date */}
+                    {formTargetPerson && (
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginBottom: 6, display: "block", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                          Día de {formTargetPerson} que vos cubrís
+                        </label>
+                        <select value={formOfferDate} onChange={e => setFormOfferDate(e.target.value)} style={{
+                          width: "100%", padding: "10px 14px", borderRadius: 10,
+                          border: "1.5px solid #E2E8F0", fontSize: 14, fontWeight: 600,
+                          fontFamily: "inherit", background: "white", color: "#1E293B",
+                        }}>
+                          <option value="">Elegí un día...</option>
+                          {getUpcomingDaysFor(formTargetPerson).map(ds => (
+                            <option key={ds} value={ds}>{fmtDateDisplay(ds)}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Submit */}
+                <button
+                  onClick={createTrade}
+                  disabled={!formRequesterDate || (formType === 'directed' && (!formTargetPerson || !formOfferDate))}
+                  style={{
+                    ...btnStyle(currentPersonObj?.gradient || "#2563EB", "white"),
+                    width: "100%", padding: "14px", fontSize: 16, borderRadius: 12,
+                    opacity: (!formRequesterDate || (formType === 'directed' && (!formTargetPerson || !formOfferDate))) ? 0.5 : 1,
+                  }}
+                >
+                  Solicitar intercambio
+                </button>
+              </div>
+            )}
+
+            {/* ─── Pending trades list ─── */}
+            <div style={{ marginBottom: 16 }}>
+              <h3 style={{
+                fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800,
+                color: "#334155", marginBottom: 12,
+                display: "flex", alignItems: "center", gap: 8,
+              }}>
+                Intercambios pendientes
+                {pendingTrades.length > 0 && (
+                  <span style={{
+                    background: "#EF4444", color: "white", fontSize: 11, fontWeight: 800,
+                    padding: "2px 8px", borderRadius: 10, minWidth: 22, textAlign: "center",
+                  }}>{pendingTrades.length}</span>
+                )}
+              </h3>
+
+              {pendingTrades.length === 0 ? (
+                <div style={{
+                  background: "white", borderRadius: 16, padding: "24px",
+                  textAlign: "center", color: "#94A3B8", border: "1.5px solid #E2E8F0",
+                }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>🐕</div>
+                  <p style={{ fontWeight: 600, fontSize: 14 }}>No hay intercambios pendientes</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {pendingTrades.map(([id, trade]) => {
+                    const requesterP = PEOPLE.find(p => p.name === trade.requester);
+                    const isMyTrade = trade.requester === currentUser;
+                    const isDirectedAtMe = trade.type === 'directed' && trade.targetPerson === currentUser;
+                    const canAccept = !isMyTrade && (trade.type === 'open' || isDirectedAtMe);
+
+                    return (
+                      <div key={id} style={{
+                        background: "white", borderRadius: 16, padding: "16px",
+                        border: `1.5px solid ${isDirectedAtMe ? (currentPersonObj?.border || "#E2E8F0") : "#E2E8F0"}`,
+                        boxShadow: isDirectedAtMe ? `0 2px 12px ${currentPersonObj?.color}15` : "0 2px 8px rgba(0,0,0,0.03)",
+                        animation: "fadeIn 0.3s ease",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                          <div style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            background: requesterP?.gradient, display: "flex",
+                            alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0,
+                          }}>{requesterP?.emoji}</div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 800, fontSize: 15, color: "#1E293B" }}>{trade.requester}</div>
+                            <div style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>
+                              Necesita que cubran el {fmtDateDisplay(trade.requesterDate)}
+                            </div>
+                          </div>
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 8,
+                            background: trade.type === 'open' ? "#F0F9FF" : "#FFF7ED",
+                            color: trade.type === 'open' ? "#0369A1" : "#C2410C",
+                          }}>
+                            {trade.type === 'open' ? '🔓 Abierto' : `🎯 Para ${trade.targetPerson}`}
+                          </span>
+                        </div>
+
+                        {trade.type === 'directed' && trade.offerDate && (
+                          <div style={{
+                            fontSize: 13, color: "#64748B", fontWeight: 600, marginBottom: 10,
+                            padding: "8px 12px", background: "#F8FAFC", borderRadius: 8,
+                          }}>
+                            Ofrece cubrir el {fmtDateDisplay(trade.offerDate)} de {trade.targetPerson}
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          {isMyTrade && (
+                            <>
+                              <button onClick={() => cancelTrade(id)} style={btnStyle("#FEE2E2", "#DC2626")}>
+                                ✕ Cancelar
+                              </button>
+                              <a href={whatsappLink(trade)} target="_blank" rel="noopener" style={{
+                                ...btnStyle("#25D366", "white"), textDecoration: "none",
+                                display: "flex", alignItems: "center", gap: 4,
+                              }}>📱 WhatsApp</a>
+                            </>
+                          )}
+
+                          {canAccept && trade.type === 'directed' && (
+                            <>
+                              <button onClick={() => acceptTrade(id, trade.offerDate)} style={btnStyle("#DCFCE7", "#16A34A")}>
+                                ✓ Aceptar
+                              </button>
+                              <button onClick={() => declineTrade(id)} style={btnStyle("#FEE2E2", "#DC2626")}>
+                                ✕ Rechazar
+                              </button>
+                            </>
+                          )}
+
+                          {canAccept && trade.type === 'open' && (
+                            <>
+                              {acceptingTradeId === id ? (
+                                <div style={{ display: "flex", gap: 8, alignItems: "center", flex: 1 }}>
+                                  <select value={selectedAcceptorDate} onChange={e => setSelectedAcceptorDate(e.target.value)} style={{
+                                    flex: 1, padding: "8px 12px", borderRadius: 8,
+                                    border: "1.5px solid #E2E8F0", fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+                                  }}>
+                                    <option value="">Tu día a intercambiar...</option>
+                                    {getUpcomingDaysFor(currentUser).map(ds => (
+                                      <option key={ds} value={ds}>{fmtDateDisplay(ds)}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => { if (selectedAcceptorDate) acceptTrade(id, selectedAcceptorDate); }}
+                                    disabled={!selectedAcceptorDate}
+                                    style={{
+                                      ...btnStyle("#DCFCE7", "#16A34A"),
+                                      opacity: selectedAcceptorDate ? 1 : 0.5,
+                                    }}
+                                  >✓ Confirmar</button>
+                                  <button onClick={() => { setAcceptingTradeId(null); setSelectedAcceptorDate(''); }}
+                                    style={btnStyle("#F1F5F9", "#64748B")}>✕</button>
+                                </div>
+                              ) : (
+                                <button onClick={() => setAcceptingTradeId(id)} style={btnStyle("#DCFCE7", "#16A34A")}>
+                                  ✓ Aceptar
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* ─── Trade history ─── */}
+            {recentTrades.length > 0 && (
+              <div>
+                <button onClick={() => setShowHistory(!showHistory)} style={{
+                  ...btnStyle("transparent", "#94A3B8"),
+                  padding: "8px 0", fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  {showHistory ? "▼" : "▶"} Intercambios recientes ({recentTrades.length})
+                </button>
+                {showHistory && (
+                  <div style={{
+                    display: "flex", flexDirection: "column", gap: 8, marginTop: 8,
+                    animation: "fadeIn 0.2s ease",
+                  }}>
+                    {recentTrades.map(([id, trade]) => {
+                      const p1 = PEOPLE.find(p => p.name === trade.requester);
+                      const p2 = PEOPLE.find(p => p.name === trade.acceptedBy);
+                      return (
+                        <div key={id} style={{
+                          background: "#F8FAFC", borderRadius: 12, padding: "12px 16px",
+                          border: "1px solid #E2E8F0", display: "flex", alignItems: "center", gap: 10,
+                        }}>
+                          <span style={{ fontWeight: 800, color: p1?.color, fontSize: 14 }}>{trade.requester}</span>
+                          <span style={{ color: "#94A3B8" }}>↔</span>
+                          <span style={{ fontWeight: 800, color: p2?.color, fontSize: 14 }}>{trade.acceptedBy}</span>
+                          <span style={{ color: "#94A3B8", fontSize: 12, fontWeight: 500, marginLeft: "auto" }}>
+                            {fmtDateDisplay(trade.requesterDate)} ⇄ {fmtDateDisplay(trade.acceptorDate || trade.offerDate)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -835,11 +1204,16 @@ function DogCalendar() {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         * { box-sizing: border-box; }
         body { margin: 0; }
         ::-webkit-scrollbar { height: 4px; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
         button:active { transform: scale(0.95); }
+        select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
       `}</style>
     </div>
   );
