@@ -280,14 +280,25 @@ function DogCalendar() {
     setFormOfferDate('');
   }
 
+  const PHONE_NUMBERS = {
+    "Manés": "5491158120807",
+    "Franco": "5491169212260",
+    "Santi": "5491136010141",
+  };
+
   function whatsappLink(trade) {
-    let msg;
-    if (trade.type === 'open') {
-      msg = `🐕 ¡Pedido de intercambio!\n${trade.requester} necesita que alguien cubra el ${fmtDateDisplay(trade.requesterDate)}.\n¿Alguien puede intercambiar? Revisá el calendario para aceptar.`;
-    } else {
-      msg = `🐕 ¡Pedido de intercambio!\n${trade.requester} quiere intercambiar con ${trade.targetPerson}:\n→ Vos cubrís el ${fmtDateDisplay(trade.requesterDate)}\n→ ${trade.requester} cubre tu ${fmtDateDisplay(trade.offerDate)}\nRevisá el calendario para aceptar o rechazar.`;
-    }
-    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    const requesterDate = fmtDateDisplay(trade.requesterDate);
+    const offerDate = trade.offerDate ? fmtDateDisplay(trade.offerDate) : null;
+    const acceptorDate = trade.acceptorDate ? fmtDateDisplay(trade.acceptorDate) : null;
+    const swapDate = offerDate || acceptorDate;
+    const msg = swapDate
+      ? `Te puedo cambiar el paseo de Sei el ${requesterDate}, y yo lo saco el ${swapDate}`
+      : `Te puedo cambiar el paseo de Sei el ${requesterDate}`;
+    const target = trade.targetPerson || null;
+    const phone = target ? PHONE_NUMBERS[target] : null;
+    return phone
+      ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
 
   // Categorized trades
